@@ -22,7 +22,6 @@ class Keys:
 # Adrian Rosebrock's implementation available at
 # http://www.pyimagesearch.com/2016/03/28/measuring-size-of-objects-in-an-image-with-opencv/
 class Scaler:
-    "Class for estimating the scale for pixel/meter, assuming a perpendicular view on a planar scene. The estimation function is based on Adrian Rosebrock's implementation available at http://www.pyimagesearch.com/2016/03/28/measuring-size-of-objects-in-an-image-with-opencv/"
     def __init__(self, cam_src = 0, param_src = None):
         self.image = np.zeros((1,1,1), np.uint8)
         self.prc_image = np.zeros((1,1,1), np.uint8)

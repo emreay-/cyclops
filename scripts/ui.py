@@ -16,7 +16,7 @@ def buttonCallback(event, x, y, flags, param):
     global ui, nmembers
     if event == cv2.EVENT_LBUTTONUP:
         if x in range(40,260) and y in ranges[0]:
-            sc = Scaler(0, 'trust.yaml')
+            sc = Scaler(0, 'param/trust.yaml')
             s = sc.run()
             print('{} px/meter'.format(s))
             button_color = (125, 0, 125) if s else (0, 255, 0)

@@ -34,24 +34,24 @@ class Scaler:
         self.reference_width = 0.297
         self.keys = Keys()
         self.vc = cv2.VideoCapture(cam_src)
-        self.main_window = "Scaler"
-        self.cropped_window = "Cropped"
-        self.binary_window = "Binary Image"
-        self.result_window = "Result"
+        self.main_window = 'Scaler'
+        self.cropped_window = 'Cropped'
+        self.binary_window = 'Binary Image'
+        self.result_window = 'Result'
         self.pixel_scale = None
         if param_src:
-            with open(param_src,"r") as stream:
+            with open(param_src,'r') as stream:
                 try:
                     camera_info = yaml.load(stream)
                 except yaml.YAMLError as exception:
-                    print exception
+                    print(exception)
             if camera_info:
                 self.undistort = True
-                camera_matrix = camera_info["camera_matrix"]["data"]
+                camera_matrix = camera_info['camera_matrix']['data']
                 self.camera_matrix = np.reshape(np.array(camera_matrix),(3,3))
-                distortion = camera_info["distortion_coefficients"]["data"]
+                distortion = camera_info['distortion_coefficients']['data']
                 self.distortion = np.array(distortion)
-                print "Camera calibration found. \nCamera matrix:\n{} \nDistortion:\n{}".format(camera_matrix,distortion)
+                print('Camera calibration found. \nCamera matrix:\n{} \nDistortion:\n{}'.format(camera_matrix,distortion))
 
     def midpoint(self, ptA, ptB):
         return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
@@ -80,7 +80,7 @@ class Scaler:
             cv2.rectangle(temp_img, self.roi[0], (x,y), (0, 255, 0), 2)
             cv2.imshow(self.main_window, temp_img)
             self.drag = False
-            print "Selected region: {}".format(self.roi)
+            print('Selected region: {}'.format(self.roi))
 
         if event == cv2.EVENT_RBUTTONDOWN:
             self.roi = []
@@ -130,7 +130,7 @@ class Scaler:
                 self.destroy_windows()
                 self.done = True
             else:
-                print "Operation is not done yet."
+                print('Operation is not done yet.')
 
         if k == self.keys.esc:
             self.destroy_windows()
@@ -151,14 +151,14 @@ class Scaler:
             converted = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
             box = cv2.minAreaRect(c)
             box = cv2.cv.BoxPoints(box) if imutils.is_cv2() else cv2.boxPoints(box)
-            box = np.array(box, dtype="int")
+            box = np.array(box, dtype='int')
 
             # order the points in the contour such that they appear
             # in top-left, top-right, bottom-right, and bottom-left
             # order, then draw the outline of the rotated bounding
             # box
             box = perspective.order_points(box)
-            cv2.drawContours(converted, [box.astype("int")], -1, (0, 255, 0), 2)
+            cv2.drawContours(converted, [box.astype('int')], -1, (0, 255, 0), 2)
             for (x, y) in box:
                 cv2.circle(converted, (int(x), int(y)), 5, (0, 0, 255), -1)
             (tl, tr, br, bl) = box
@@ -188,10 +188,10 @@ class Scaler:
             dimB = dB / self.pixel_scale
 
         	# draw the object sizes on the image
-            cv2.putText(converted, "{:.3f}m".format(dimA),
+            cv2.putText(converted, '{:.3f}m'.format(dimA),
                 (int(tltrX - 15), int(tltrY - 10)), cv2.FONT_HERSHEY_SIMPLEX,
                 0.65, (0, 255, 255), 2)
-            cv2.putText(converted, "{:.3f}m".format(dimB),
+            cv2.putText(converted, '{:.3f}m'.format(dimB),
                 (int(trbrX + 10), int(trbrY)), cv2.FONT_HERSHEY_SIMPLEX,
                 0.65, (170, 255, 255), 2)
 
@@ -218,9 +218,9 @@ class MemberInitializer:
         self.keys = Keys()
         self.roi = []
         self.image = np.zeros((1,1,1), np.uint8)
-        self.main_window = "Add Member"
-        self.cropped_window = "Selected Area For Member Color"
-        self.color_window = "Selected Member Color"
+        self.main_window = 'Add Member'
+        self.cropped_window = 'Selected Area For Member Color'
+        self.color_window = 'Selected Member Color'
         self.vc = cv2.VideoCapture(cam_src)
 
     def destroy_windows(self):
@@ -296,20 +296,20 @@ class MemberInitializer:
                     cv2.namedWindow(self.color_window, cv2.WINDOW_AUTOSIZE)
                     cv2.imshow(self.color_window, color_pad)
                     self.color = c
-                    print "Average BGR for member id: {}".format(self.color)
+                    print('Average BGR for member id: {}'.format(self.color))
 
                 if k == self.keys.enter:
                     if self.color:
                         self.destroy_windows()
                         self.done = True
                     else:
-                        print "Operation not done yet."
+                        print('Operation not done yet.') 
 
                 if k == self.keys.esc:
                     self.destroy_windows()
                     self.quit = True
             else:
-                print "vc not opened"
+                print('vc not opened')
         self.vc.release()
         return self.color
 

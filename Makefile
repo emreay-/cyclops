@@ -1,6 +1,6 @@
 .PHONY: installDependencies
 installDependencies:
-		pip install opencv-python
+		pip install pyyaml
 		pip install imutils
 		pip install scipy
 		pip install numpy

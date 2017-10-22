@@ -3,7 +3,7 @@
 # Cyclops project: Localization system with an overhead camera
 #
 
-from scale_estimation import scale_estimation
+from cyclops.scale_estimation import scale_estimation
 import numpy as np
 import argparse
 import cv2

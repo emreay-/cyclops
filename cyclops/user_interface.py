@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
-from cyclops import Scaler
-from cyclops import Member
+from cyclops.utility import Scaler
+from cyclops.utility import Member
 
 
 class UserInterface(object):

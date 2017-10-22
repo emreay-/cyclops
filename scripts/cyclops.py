@@ -186,7 +186,7 @@ class MemberInitializer:
             cv2.destroyWindow(self.color_window)
 
     def add_padding(self, image, padding=50):
-        offset = padding/2
+        offset = int(padding / 2)
         # background image to show the selected area
         back = np.zeros((image.shape[0]+padding, image.shape[1]+padding, image.shape[2]), np.uint8)
         # overlaying cropped area on background image

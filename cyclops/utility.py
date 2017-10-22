@@ -249,12 +249,17 @@ class MemberInitializer:
 
 class Member:
     members = int(0)
+
     def __init__(self):
-        self.color = None
-        self.initializer = MemberInitializer()
+        self._color = None
         Member.members += 1
-        self.idx = Member.members
-        # self.idx = self.__idx
+        self._id = Member.members
+
+    def initialize_color(self):
+        self._color = MemberInitializer().get_member_color()
+
     def get_color(self):
-        self.color = self.initializer.get_member_color()
-        return self.color
+        return self._color
+
+    def get_id(self):
+        return self._id

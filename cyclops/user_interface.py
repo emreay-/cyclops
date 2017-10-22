@@ -28,16 +28,18 @@ class UserInterface(object):
 
             if x in range(40,260) and y in self.ranges[1]:
                 if len(self.members) in range(0,3):
-                    m = Member()
-                    col = m.get_color()
-                    if col:
-                        self.members.append(m)
-                    button_color = (125, 0, 125) if len(self.members) in range(1,4) else (0, 255, 0)
-                    cv2.rectangle(self.ui, (self.buttons[1][0]), (self.buttons[1][1]), button_color, -1)
-                    cv2.putText(self.ui, self.text[1], self.text_offset[1], self.font, 0.8, (0,0,0), 2)
-                    for mb in range(0,len(self.members)):
-                        c = self.members[mb].color
-                        cv2.rectangle(self.ui, (self.color_area[mb][0]), (self.color_area[mb][1]), c, -1)
+                    member = Member()
+                    member.initialize_color()
+                    if member.get_color():
+                        self.members.append(member)
+                        button_color = (125, 0, 125) if len(self.members) in range(1,4) else (0, 255, 0)
+                        cv2.rectangle(self.ui, (self.buttons[1][0]), (self.buttons[1][1]), button_color, -1)
+                        cv2.putText(self.ui, self.text[1], self.text_offset[1], self.font, 0.8, (0,0,0), 2)
+                        for mb in range(0,len(self.members)):
+                            c = self.members[mb].get_color()
+                            cv2.rectangle(self.ui, (self.color_area[mb][0]), (self.color_area[mb][1]), c, -1)
+                    else:
+                        print('Member color is not initialized')
                 else:
                     print('Maximum 3 members can be added.')
 

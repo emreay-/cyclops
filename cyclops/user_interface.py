@@ -176,6 +176,17 @@ class UserInterface(object):
                         print('Member color is not initialized')
                 else:
                     print('Maximum 3 members can be added.')
+            
+            if button_name == 'Initialize':
+                if len(self.members) > 0:
+                    for member in self.members.values():
+                        member.initialize_location()
+                        print(member.initial_location)
+
+                    self.set_button_as_processed(button_name)
+                else:
+                    print('There are no members yet, add members first.')
+
 
     def set_button_as_processed(self, button_name):
         self.window.buttons[button_name].background_color = self.button_color_when_processed

@@ -128,6 +128,8 @@ class Window(object):
             _y = self.height - (self.footer_height // 2)
 
             cv2.circle(self.canvas, (_x, _y), _radius, color, thickness=-1)
+            cv2.putText(self.canvas, 'M:{}'.format(self.footer_elements_counter), 
+                        (_x - _radius, _y + _radius // 3), self.default_font, 0.8, (0,0,0), 2)
 
 
 class UserInterface(object):
@@ -144,7 +146,7 @@ class UserInterface(object):
         self.create_buttons()
         self.window.update_buttons()
 
-        self.members = []
+        self.members = dict()
     
     def create_buttons(self):
         for button_name, position_idx, text_offset in self.button_info:
@@ -165,11 +167,11 @@ class UserInterface(object):
                 if len(self.members) in range(0,3):
                     member = Member()
                     member.initialize_color()
-                    if member.get_color():
-                        self.members.append(member)
+                    if member.color:
+                        self.members[member.id] = member
                         if len(self.members) in range(1, 4):
                             self.set_button_as_processed(button_name)
-                            self.window.add_colored_box_in_footer(member.get_color())
+                            self.window.add_colored_box_in_footer(member.color)
                     else:
                         print('Member color is not initialized')
                 else:

@@ -1,13 +1,9 @@
-from typing import Tuple
-
 import numpy as np
 import cv2
 from math import ceil
 
+from cyclops.type_hints import *
 from cyclops.utility import Scaler, Member
-
-color_type = Tuple[float, float, float]
-pixel_coord = Tuple[int, int]
 
 
 class Button(object):

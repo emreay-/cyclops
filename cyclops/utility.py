@@ -258,8 +258,10 @@ class Member:
     def initialize_color(self):
         self._color = MemberInitializer().get_member_color()
 
-    def get_color(self):
+    @property
+    def color(self):
         return self._color
 
-    def get_id(self):
+    @property
+    def id(self):
         return self._id

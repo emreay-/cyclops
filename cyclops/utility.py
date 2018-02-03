@@ -3,11 +3,14 @@
 # Cyclops project: Localization system with an overhead camera
 #
 
-from cyclops.scale_estimation import scale_estimation
-import numpy as np
 import argparse
+from typing import Callable
+
+import numpy as np
 import cv2
 import yaml
+
+from cyclops.scale_estimation import scale_estimation
 
 class Keys:
     space = 32
@@ -20,13 +23,13 @@ class Scaler:
         self.image = np.zeros((1,1,1), np.uint8)
         self.processed_image = np.zeros((1,1,1), np.uint8)
         self.roi = []
-        self.done = False
+        self.is_done = False
         self.quit = False
-        self.drag = False
-        self.cropped = False
+        self.is_dragging = False
+        self.is_cropped = False
         self.undistort = False
         self.reference_width = 0.297
-        self.vc = cv2.VideoCapture(cam_src)
+        self.video_capture = cv2.VideoCapture(cam_src)
         self.main_window = 'Scaler'
         self.cropped_window = 'Cropped'
         self.binary_window = 'Binary Image'
@@ -53,29 +56,29 @@ class Scaler:
         cv2.destroyWindow(self.result_window)
 
     def mouse_callback(self, event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN and not self.drag:
+        if event == cv2.EVENT_LBUTTONDOWN and not self.is_dragging:
             self.roi = [(x,y)]
-            self.drag = True
+            self.is_dragging = True
 
-        if event == cv2.EVENT_MOUSEMOVE and self.drag:
+        if event == cv2.EVENT_MOUSEMOVE and self.is_dragging:
             temp_image = self.processed_image.copy()
             temp_image = cv2.cvtColor(self.processed_image, cv2.COLOR_GRAY2RGB)
             cv2.rectangle(temp_image, self.roi[0], (x,y), (0, 255, 0), 2)
             cv2.imshow(self.main_window, temp_image)
 
-        if event == cv2.EVENT_LBUTTONUP and self.drag:
+        if event == cv2.EVENT_LBUTTONUP and self.is_dragging:
             self.roi.append((x,y))
             temp_image = self.processed_image.copy()
             temp_image = cv2.cvtColor(self.processed_image, cv2.COLOR_GRAY2RGB)
             cv2.rectangle(temp_image, self.roi[0], (x,y), (0, 255, 0), 2)
             cv2.imshow(self.main_window, temp_image)
-            self.drag = False
+            self.is_dragging = False
             print('Selected region: {}'.format(self.roi))
 
         if event == cv2.EVENT_RBUTTONDOWN:
             self.roi = []
-            self.drag = False
-            self.cropped = False
+            self.is_dragging = False
+            self.is_cropped = False
             cv2.destroyWindow(self.cropped_window)
             cv2.destroyWindow(self.binary_window)
             cv2.destroyWindow(self.result_window)
@@ -96,8 +99,8 @@ class Scaler:
 
         k = cv2.waitKey(50)
         cropped_image = self.processed_image
-        if k == Keys.space or self.cropped:
-            self.cropped = True
+        if k == Keys.space or self.is_cropped:
+            self.is_cropped = True
             if len(self.roi) == 2:
                 (r1,r2),(r3,r4) = self.roi
                 y1 = min(r1,r3)
@@ -108,7 +111,7 @@ class Scaler:
                 cv2.namedWindow(self.cropped_window, cv2.WINDOW_AUTOSIZE)
                 cv2.imshow(self.cropped_window, cropped_image)
 
-        if k == Keys.c and self.cropped:
+        if k == Keys.c and self.is_cropped:
             th = int(np.mean(cropped_image))
             ret, thresh = cv2.threshold(cropped_image, th, 255, cv2.THRESH_BINARY)
             cv2.namedWindow(self.binary_window, cv2.WINDOW_AUTOSIZE)
@@ -118,7 +121,7 @@ class Scaler:
         if k == Keys.enter:
             if self.pixel_scale:
                 self.destroy_windows()
-                self.done = True
+                self.is_done = True
             else:
                 print('Operation is not done yet.')
 
@@ -132,29 +135,30 @@ class Scaler:
             cv2.imshow(self.result_window, color_image)
 
     def run(self):
-        while not self.done and not self.quit:
-            if self.vc.isOpened():
-                _ , self.image = self.vc.read()
+        while not self.is_done and not self.quit:
+            if self.video_capture.isOpened():
+                _ , self.image = self.video_capture.read()
                 if self.undistort:
                     cv2.undistort(self.image, self.camera_matrix, self.distortion)
                 self.process(self.image)
-        self.vc.release()
+        self.video_capture.release()
         return self.pixel_scale
 
 
 class MemberInitializer:
+
     def __init__(self, cam_src = 0):
         self.color = None
-        self.done = False
+        self.is_done = False
         self.quit = False
-        self.drag = False
-        self.cropped = False
+        self.is_dragging = False
+        self.is_cropped = False
         self.roi = []
         self.image = np.zeros((1,1,1), np.uint8)
-        self.main_window = 'Add Member'
+        self.main_window = 'Member Initializer'
         self.cropped_window = 'Selected Area For Member Color'
         self.color_window = 'Selected Member Color'
-        self.vc = cv2.VideoCapture(cam_src)
+        self.video_capture = cv2.VideoCapture(cam_src)
 
     def destroy_windows(self):
         cv2.destroyWindow(self.main_window)
@@ -162,89 +166,147 @@ class MemberInitializer:
         cv2.destroyWindow(self.color_window)
 
     def mouse_callback(self, event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN and not self.drag:
+        if event == cv2.EVENT_LBUTTONDOWN and not self.is_dragging:
             self.roi = [(x,y)]
-            self.drag = True
+            self.is_dragging = True
 
-        if event == cv2.EVENT_MOUSEMOVE and self.drag:
+        if event == cv2.EVENT_MOUSEMOVE and self.is_dragging:
             temp_image = self.image.copy()
             cv2.rectangle(temp_image, self.roi[0], (x,y), (0, 255, 0), 2)
             cv2.imshow(self.main_window, temp_image)
 
-        if event == cv2.EVENT_LBUTTONUP and self.drag:
+        if event == cv2.EVENT_LBUTTONUP and self.is_dragging:
             self.roi.append((x,y))
             temp_image = self.image.copy()
             cv2.rectangle(temp_image, self.roi[0], (x,y), (0, 255, 0), 2)
             cv2.imshow(self.main_window, temp_image)
-            self.drag = False
+            self.is_dragging = False
 
         if event == cv2.EVENT_RBUTTONDOWN:
             self.roi = []
-            self.drag = False
-            self.cropped = False
+            self.is_dragging = False
+            self.is_cropped = False
             cv2.destroyWindow(self.cropped_window)
             cv2.destroyWindow(self.color_window)
 
+    def get_member_color(self):
+        self.run_loop(self.process_key_for_color_initialization)
+        return self.color
+
+    def initialize_member_location(self):
+        self.run_loop(self.process_key_for_location_initialization)
+        return self.init_location
+
+    def run_loop(self, key_processor: Callable):
+        self.handle_main_window()
+
+        while not self.is_done and not self.quit:
+            if self.video_capture.isOpened():
+                self.capture_image()
+                key = self.wait_key()
+
+                if self.is_region_selected():
+                    self.show_selected_region_on_captured_image()
+                else:
+                    self.show_captured_image()
+                
+                key_processor(key)
+
+            else:
+                print('VideoCapture not opened')
+
+        self.video_capture.release()
+
+    def handle_main_window(self):
+        self.create_main_window()
+        self.set_mouse_callback()
+
+    def create_main_window(self):
+        cv2.namedWindow(self.main_window, cv2.WINDOW_AUTOSIZE)
+
+    def set_mouse_callback(self):
+        cv2.setMouseCallback(self.main_window, self.mouse_callback)
+
+    def capture_image(self):
+        _ , self.image = self.video_capture.read()
+
+    def wait_key(self):
+        return cv2.waitKey(50)
+
+    def is_region_selected(self):
+        return len(self.roi) == 2
+
+    def show_selected_region_on_captured_image(self):
+        temp_image = self.image.copy()
+        cv2.rectangle(temp_image, self.roi[0], self.roi[1], (0, 0, 255), 2)
+        cv2.imshow(self.main_window, temp_image)
+
+    def show_captured_image(self):
+        cv2.imshow(self.main_window, self.image)
+    
+    def process_key_for_color_initialization(self, key):
+        if key == Keys.space or self.is_cropped:
+            self.is_cropped = True
+            if len(self.roi) == 2:
+                (x1, y1), (x2, y2) = self.get_top_left_bottom_right_points_from_roi()
+                self.cropped_image = self.image[x1:x2,y1:y2]
+                cv2.namedWindow(self.cropped_window, cv2.WINDOW_AUTOSIZE)
+                cv2.imshow(self.cropped_window, self.add_padding(self.cropped_image))
+
+        if key == Keys.c and self.is_cropped:
+            mean_color = cv2.mean(self.cropped_image)
+            mean_color_image = self.cropped_image
+            mean_color_image[:] = (mean_color[0], mean_color[1], mean_color[2])
+            cv2.namedWindow(self.color_window, cv2.WINDOW_AUTOSIZE)
+            cv2.imshow(self.color_window, self.add_padding(mean_color_image))
+            self.color = mean_color
+            print('Average BGR for member id: {}'.format(self.color))
+
+        if key == Keys.enter:
+            if self.color:
+                self.destroy_windows()
+                self.is_done = True
+            else:
+                print('Operation not done yet.')
+
+        self.process_escape_key(key)
+
+    def get_top_left_bottom_right_points_from_roi(self):
+        (r1,r2),(r3,r4) = self.roi
+        y1 = min(r1,r3)
+        y2 = max(r1,r3)
+        x1 = min(r2,r4)
+        x2 = max(r2,r4)
+        return (x1, y1), (x2, y2)
+    
     def add_padding(self, image, padding=50):
         offset = int(padding / 2)
-        # background image to show the selected area
-        back = np.zeros((image.shape[0]+padding, image.shape[1]+padding, image.shape[2]), np.uint8)
-        # overlaying cropped area on background image
-        back[offset:offset+image.shape[0],offset:offset+image.shape[1]] = image
-        return back
+        image_with_padding = np.zeros((image.shape[0]+padding, image.shape[1]+padding, image.shape[2]), np.uint8)
+        image_with_padding[offset:offset+image.shape[0],offset:offset+image.shape[1]] = image
+        return image_with_padding
 
-    def get_member_color(self):
-        while not self.done and not self.quit:
-            if self.vc.isOpened():
-                _ , self.image = self.vc.read()
-                cv2.namedWindow(self.main_window, cv2.WINDOW_AUTOSIZE)
-                cv2.setMouseCallback(self.main_window, self.mouse_callback)
-                k = cv2.waitKey(50)
-                crop = self.image
-                if k == Keys.space or self.cropped:
-                    self.cropped = True
-                    if len(self.roi) == 2:
-                        (r1,r2),(r3,r4) = self.roi
-                        y1 = min(r1,r3)
-                        y2 = max(r1,r3)
-                        x1 = min(r2,r4)
-                        x2 = max(r2,r4)
-                        crop = crop[x1:x2,y1:y2]
-                        crop_pad = self.add_padding(crop)
-                        cv2.namedWindow(self.cropped_window, cv2.WINDOW_AUTOSIZE)
-                        cv2.imshow(self.cropped_window, crop_pad)
+    def process_key_for_location_initialization(self, key):
+        if key == Keys.enter:
+            if len(self.roi) == 2:
+                (r1,r2),(r3,r4) = self.roi
+                y1 = min(r1,r3)
+                y2 = max(r1,r3)
+                x1 = min(r2,r4)
+                x2 = max(r2,r4)
 
-                if len(self.roi) == 2:
-                    temp_image = self.image.copy()
-                    cv2.rectangle(temp_image, self.roi[0], self.roi[1], (0, 0, 255), 2)
-                    cv2.imshow(self.main_window, temp_image)
-                else:
-                    cv2.imshow(self.main_window, self.image)
-
-                if k == Keys.c and self.cropped:
-                    c = cv2.mean(crop)
-                    color_image = crop
-                    color_image[:] = (c[0],c[1],c[2])
-                    color_pad = self.add_padding(color_image)
-                    cv2.namedWindow(self.color_window, cv2.WINDOW_AUTOSIZE)
-                    cv2.imshow(self.color_window, color_pad)
-                    self.color = c
-                    print('Average BGR for member id: {}'.format(self.color))
-
-                if k == Keys.enter:
-                    if self.color:
-                        self.destroy_windows()
-                        self.done = True
-                    else:
-                        print('Operation not done yet.')
-
-                if k == Keys.esc:
-                    self.destroy_windows()
-                    self.quit = True
+                self.init_location = ((x1 + x2) / 2.0, (y1 + y2) / 2.0) 
+                self.destroy_windows()
+                self.is_done = True
+            
             else:
-                print('vc not opened')
-        self.vc.release()
-        return self.color
+                print('Operation not done yet.')
+
+        self.process_escape_key(key)
+
+    def process_escape_key(self, key):
+        if key == Keys.esc:
+            self.destroy_windows()
+            self.quit = True
 
 
 class Member:
@@ -257,6 +319,9 @@ class Member:
 
     def initialize_color(self):
         self._color = MemberInitializer().get_member_color()
+    
+    def initialize_location(self):
+        self._init_location = MemberInitializer().initialize_member_location()
 
     @property
     def color(self):
@@ -265,3 +330,7 @@ class Member:
     @property
     def id(self):
         return self._id
+
+    @property
+    def initial_location(self):
+        return self._init_location

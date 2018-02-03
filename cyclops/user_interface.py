@@ -156,9 +156,9 @@ class UserInterface(object):
             
             if button_name == 'Get Scale':
                 scaler = Scaler(0, '/home/vetenskap/workspace/cyclops/param/trust.yaml')
-                s = scaler.run()
-                print('{} px/meter'.format(s))
-                if s != None:
+                scale = scaler.run()
+                print('Scale: {} px/meter'.format(scale))
+                if scale != None:
                     self.set_button_as_processed(button_name)
 
             if button_name == 'Add Member':

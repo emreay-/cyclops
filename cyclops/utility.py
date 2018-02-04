@@ -199,8 +199,8 @@ class Scaler(VideoCaptureInterface):
 
     def process_image(self):
         if self.undistort:
-            cv2.undistort(self.image, self.camera_matrix, self.distortion)
-        self.processed_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+            self.processed_image = cv2.undistort(self.image, self.camera_matrix, self.distortion)
+        self.processed_image = cv2.cvtColor(self.processed_image, cv2.COLOR_BGR2GRAY)
         self.processed_image = cv2.GaussianBlur(self.processed_image, (7, 7), 0)
 
     def run(self):

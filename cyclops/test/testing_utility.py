@@ -46,12 +46,38 @@ def write_dummy_parameters_file(*args):
         with open(arg, 'w') as handle:
             handle.writelines('''{
     "camera_source": 0,
+    "image_size": [480, 640],
     "number_of_particles": 1000,
     "process_covariance": [1e-2, 1e-2, 1e-2],
     "measurement_covariance": [1e-2, 1e-2, 1e-2],
     "inital_location_covariance": [1e-2, 1e-2, 1e-2],
     "reference_distance": 5.0
  }''')
+
+
+def write_dummy_camera_parameters_file(*args):
+    for arg in args:
+        with open(arg, 'w') as handle:
+            handle.writelines('''image_width: 640
+image_height: 480
+camera_name: narrow_stereo
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [696.019484, 0.000000, 349.918582, 0.000000, 696.225875, 217.635331, 0.000000, 0.000000, 1.000000]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0.259910, -0.975120, -0.021119, -0.007444, 0.000000]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000, 0.000000, 1.000000]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [705.152710, 0.000000, 348.171845, 0.000000, 0.000000, 705.937256, 211.281035, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000]''')
 
 
 def create_dummy_video_file(output_dir: str, file_name_without_extension: str = 'out', 

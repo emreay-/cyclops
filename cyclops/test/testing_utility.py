@@ -4,6 +4,8 @@ import unittest
 import tempfile
 import shutil
 
+from subprocess import check_call
+
 import numpy as np
 import cv2
 
@@ -53,22 +55,21 @@ def write_dummy_parameters_file(*args):
 
 
 def create_dummy_video_file(output_dir: str, file_name_without_extension: str = 'out', 
-                            fps: float = 20.0, video_size: pixel_coord = (640, 480),
+                            fps: float = 20.0, video_size: pixel_coord = (480, 640),
                             video_length_in_seconds: float = 2.0):
 
-    _video_path = os.path.join(output_dir, file_name_without_extension + '.avi')
-
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    video_writer = cv2.VideoWriter(_video_path, fourcc, fps, video_size)
-
+    _video_path = os.path.join(output_dir, file_name_without_extension + '.mp4')
     _number_of_frames = round(video_length_in_seconds * fps)
     _frame = np.zeros((video_size[0], video_size[1], 3), np.uint8)
 
     for i in range(_number_of_frames):
-        video_writer.write(_frame)
-        cv2.imshow('frame',_frame)
-        cv2.waitKey(50)
+        _png_path = os.path.join(output_dir, 'img{:05d}.png'.format(i))
+        cv2.imwrite(_png_path, _frame)        
     
-    video_writer.release()
+    _image = output_dir + os.path.sep + 'img%05d.png'
+
+    command = ['ffmpeg', '-loglevel', 'quiet', '-y', '-f', 'image2', '-r', '24',
+               '-i', _image, '-an', '-vcodec', 'mpeg4', _video_path ]
+    check_call(command)
 
     return _video_path

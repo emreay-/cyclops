@@ -46,12 +46,13 @@ def write_dummy_parameters_file(*args):
         with open(arg, 'w') as handle:
             handle.writelines('''{
     "camera_source": 0,
-    "image_size": [480, 640],
+    "image_width": 640,
+    "image_height": 480,
     "number_of_particles": 1000,
     "process_covariance": [1e-2, 1e-2, 1e-2],
     "measurement_covariance": [1e-2, 1e-2, 1e-2],
     "inital_location_covariance": [1e-2, 1e-2, 1e-2],
-    "reference_distance": 5.0
+    "reference_distance": 0.05
  }''')
 
 

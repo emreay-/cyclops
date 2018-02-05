@@ -5,6 +5,7 @@ import math
 
 import numpy as np
 import cv2
+from scipy.stats import multivariate_normal
 
 from cyclops.type_hints import *
 
@@ -36,8 +37,9 @@ class ParticleFilter(object):
         with open(self.parameters_file, 'r') as handle:
             parameters = json.load(handle)
             self.camera_source = parameters['camera_source']
-            self.image_size = parameters['image_size']
-            self.frame_translation = list(map(lambda x: x//2, self.image_size))
+            self.image_width = parameters['image_width']
+            self.image_height = parameters['image_height']
+            self.frame_translation = [self.image_width // 2, self.image_height // 2]
             self.number_of_particles = parameters['number_of_particles']
             self.process_covariance = np.diag(parameters['process_covariance'])
             self.measurement_covariance = np.diag(parameters['measurement_covariance'])
@@ -63,8 +65,8 @@ class ParticleFilter(object):
         self.weights = np.array([1.0] * self.number_of_particles)
 
     def convert_pixel_space_to_physical_space(self, location: coordinate):
-        x = location[0] * self.camera_scale + self.frame_translation[0]
-        y = -1 * location[1] * self.camera_scale + self.frame_translation[1]
+        x = (location[0] - self.frame_translation[0]) / self.camera_scale
+        y = (-1 * location[1] + self.frame_translation[1]) / self.camera_scale
         return x, y
 
     def apply_mode_to_particle_thetas(self):
@@ -73,6 +75,7 @@ class ParticleFilter(object):
 
     def run(self):
         self.create_video_capture()
+        self.create_density_functions()
         while True:
             self.get_undistorted_image()
             self.run_process_model()
@@ -83,6 +86,13 @@ class ParticleFilter(object):
     def create_video_capture(self):
         self.video_capture = cv2.VideoCapture(self.camera_source)
 
+    def create_density_functions(self):
+        self.measurement_probability_for_xy = multivariate_normal(
+            mean=self.color_to_track, cov=self.measurement_covariance)
+        
+        self.measurement_probability_for_theta = multivariate_normal(
+            mean=(0, 0, 0), cov=self.measurement_covariance)
+
     def get_undistorted_image(self):
         self.capture_image()
         self.undistort_image()
@@ -91,7 +101,7 @@ class ParticleFilter(object):
         _ , self.captured_image = self.video_capture.read()
 
     def undistort_image(self):
-        self.undistored_image = cv2.undistort(self.captured_image, self.camera_matrix, self.distortion)
+        self.undistorted_image = cv2.undistort(self.captured_image, self.camera_matrix, self.distortion)
 
     def run_process_model(self):
         self.process_noise = np.transpose(np.random.multivariate_normal(
@@ -99,13 +109,59 @@ class ParticleFilter(object):
         self.particles += self.process_noise
     
     def run_measurement_update(self):
-        pass
+        particles_in_pixel_space = self.convert_array_from_physical_to_pixel_space(self.particles)
+        measurements_for_xy = self.get_measurements(particles_in_pixel_space)
+        weights_xy = self.get_probabilities_for_xy_measurements(measurements_for_xy)
 
-    def convert_particles_to_pixel_space(self):
-        self.particle_pixel_coordinates = self.particles
-        self.particle_pixel_coordinates[0, :] = np.apply_along_axis(
-            lambda x: np.floor((x - self.frame_translation[0]) / (-1 * self.camera_scale)), axis=0, arr=self.particles[1, :])
-        print(self.particle_pixel_coordinates)
+        locations_for_angle_measurements = self.get_locations_for_angle_measurements()
+        pixel_locations_for_angle_measurement = self.convert_array_from_physical_to_pixel_space(
+            locations_for_angle_measurements)
+        measurements_for_angle = self.get_measurements(pixel_locations_for_angle_measurement)
+        weights_theta = self.get_probabilities_for_angle_measurements(measurements_for_angle)
+
+        self.weights = np.mean(np.array([weights_xy, weights_theta]), axis=0)
+
+    def convert_array_from_physical_to_pixel_space(self, array: np.array):
+        converted_array = np.copy(array)
+        
+        converted_array[0, :] = np.apply_along_axis(
+            lambda x: x * self.camera_scale + self.frame_translation[0], 
+            axis=0, arr=array[0, :])
+
+        converted_array[1, :] = np.apply_along_axis(
+            lambda y: -1 * (y * self.camera_scale + self.frame_translation[1]),
+            axis=0, arr=array[1, :])
+        return converted_array.astype(int)
+
+    def get_image_value_at(self, coord: coordinate):
+        return self.undistorted_image[int(coord[0]), int(coord[1])]
+        
+    def get_measurements(self, array_of_pixel_coordinates: np.array):
+        return np.apply_along_axis(self.get_image_value_at, axis=0, arr=array_of_pixel_coordinates[:2, :])
+
+    def get_probabilities_for_xy_measurements(self, measurements: np.array):
+        return np.apply_along_axis(
+            lambda m: self.measurement_probability_for_xy.pdf((m[0], m[1], m[2])), axis=0, arr=measurements)
+
+    def get_locations_for_angle_measurements(self):
+        def _get_location(particle):
+            if (particle[2] % math.pi) == 0:
+                delta_x = self.reference_distance
+                delta_y = 0
+            elif (particle[2] % math.pi) == math.pi / 2.:
+                delta_x = 0
+                delta_y = self.reference_distance
+            else:
+                delta_x = self.reference_distance * math.cos(particle[2])
+                delta_y = self.reference_distance * math.sin(particle[2])
+            
+            return np.array([particle[0] + delta_x, particle[1] + delta_y])
+        
+        return np.apply_along_axis(_get_location, axis=0, arr=self.particles)
+
+    def get_probabilities_for_angle_measurements(self, measurements: np.array):
+        return np.apply_along_axis(
+            lambda m: self.measurement_probability_for_theta.pdf((m[0], m[1], m[2])), axis=0, arr=measurements)
 
     def resample_particles(self):
         pass

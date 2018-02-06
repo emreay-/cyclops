@@ -1,9 +1,11 @@
+import os
 import numpy as np
 import cv2
 from math import ceil
 
 from cyclops.type_hints import *
 from cyclops.utility import Scaler, Member
+from cyclops.particle_filter import ParticleFilter
 
 
 class Button(object):
@@ -142,6 +144,7 @@ class UserInterface(object):
         self.create_buttons()
         self.window.update_buttons()
 
+        self.scale = None
         self.members = dict()
     
     def create_buttons(self):
@@ -154,9 +157,9 @@ class UserInterface(object):
             
             if button_name == 'Get Scale':
                 scaler = Scaler(0, '/home/vetenskap/workspace/cyclops/param/trust.yaml')
-                scale = scaler.run()
-                print('Scale: {} px/meter'.format(scale))
-                if scale != None:
+                self.scale = scaler.run()
+                print('Scale: {} px/meter'.format(self.scale))
+                if self.scale != None:
                     self.set_button_as_processed(button_name)
 
             if button_name == 'Add Member':
@@ -182,7 +185,19 @@ class UserInterface(object):
                     self.set_button_as_processed(button_name)
                 else:
                     print('There are no members yet, add members first.')
-
+            
+            if button_name == 'Start!':
+                if len(self.members) > 0:
+                    parameters_file = os.path.join(os.getenv('CYCLOPS_PROJ_DIR'), 'param', 'filter_parameters.json')
+                    camera_parameters_file = os.path.join(os.getenv('CYCLOPS_PROJ_DIR'), 'param', 'trust.yaml')
+                    particle_filter = ParticleFilter(parameters_file=parameters_file, 
+                                                     camera_parameters_file=camera_parameters_file,
+                                                     camera_scale=self.scale, 
+                                                     color_to_track=self.members[1].color)
+                    particle_filter.initialize_particles(self.members[1].initial_location)
+                    particle_filter.run()
+                else:
+                    print('There are no members yet, add members first.')
 
     def set_button_as_processed(self, button_name):
         self.window.buttons[button_name].background_color = self.button_color_when_processed

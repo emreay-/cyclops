@@ -276,10 +276,10 @@ class MemberInitializer(VideoCaptureInterface):
         if key == Keys.c and self.is_cropped:
             mean_color = cv2.mean(self.cropped_image)
             mean_color_image = self.cropped_image
-            mean_color_image[:] = (mean_color[0], mean_color[1], mean_color[2])
+            self.color = (mean_color[0], mean_color[1], mean_color[2])
+            mean_color_image[:] = self.color
             cv2.namedWindow(self.color_window, cv2.WINDOW_AUTOSIZE)
             cv2.imshow(self.color_window, self.add_padding(mean_color_image))
-            self.color = mean_color
             print('Average BGR for member id: {}'.format(self.color))
 
         if key == Keys.enter:

@@ -75,16 +75,23 @@ class ParticleFilter(object):
 
     def run(self):
         self.create_video_capture()
+        self.create_window()
         self.create_density_functions()
         while True:
             self.get_undistorted_image()
             self.run_process_model()
             self.run_measurement_update()
             self.resample_particles()
-            self.wait_key()
+            self.visualize()
+            print('here')
+            key = self.wait_key()
     
     def create_video_capture(self):
         self.video_capture = cv2.VideoCapture(self.camera_source)
+
+    def create_window(self):
+        self.window = 'PF Localization'
+        cv2.namedWindow(self.window, cv2.WINDOW_AUTOSIZE)
 
     def create_density_functions(self):
         self.measurement_probability_for_xy = multivariate_normal(
@@ -103,14 +110,17 @@ class ParticleFilter(object):
     def undistort_image(self):
         self.undistorted_image = cv2.undistort(self.captured_image, self.camera_matrix, self.distortion)
 
+    def convert_particles(self):
+        self.particles_in_pixel_space = self.convert_array_from_physical_to_pixel_space(self.particles)
+
     def run_process_model(self):
         self.process_noise = np.transpose(np.random.multivariate_normal(
             mean=(0., 0., 0.), cov=self.process_covariance, size=self.number_of_particles))
         self.particles += self.process_noise
     
     def run_measurement_update(self):
-        particles_in_pixel_space = self.convert_array_from_physical_to_pixel_space(self.particles)
-        measurements_for_xy = self.get_measurements(particles_in_pixel_space)
+        self.convert_particles()
+        measurements_for_xy = self.get_measurements(self.particles_in_pixel_space)
         weights_xy = self.get_probabilities_for_xy_measurements(measurements_for_xy)
 
         locations_for_angle_measurements = self.get_locations_for_angle_measurements()
@@ -120,6 +130,7 @@ class ParticleFilter(object):
         weights_theta = self.get_probabilities_for_angle_measurements(measurements_for_angle)
 
         self.weights = np.mean(np.array([weights_xy, weights_theta]), axis=0)
+        self.normalize_weights()
 
     def convert_array_from_physical_to_pixel_space(self, array: np.array):
         converted_array = np.copy(array)
@@ -134,14 +145,25 @@ class ParticleFilter(object):
         return converted_array.astype(int)
 
     def get_image_value_at(self, coord: coordinate):
-        return self.undistorted_image[int(coord[0]), int(coord[1])]
-        
+        (x, y) = coord
+        if self.check_pixel_coordinates(x, y):
+            return self.undistorted_image[int(y), int(x)]
+        else:
+            return (-1, -1, -1)
+    
+    def check_pixel_coordinates(self, x, y):
+        return (0 <= x < self.image_width) and (0 <= y < self.image_height)
+
     def get_measurements(self, array_of_pixel_coordinates: np.array):
         return np.apply_along_axis(self.get_image_value_at, axis=0, arr=array_of_pixel_coordinates[:2, :])
 
     def get_probabilities_for_xy_measurements(self, measurements: np.array):
-        return np.apply_along_axis(
-            lambda m: self.measurement_probability_for_xy.pdf((m[0], m[1], m[2])), axis=0, arr=measurements)
+        def _probability(measurement):
+            if (measurement[0], measurement[1], measurement[2]) == (-1, -1, -1):
+                return 0.
+            else: 
+                return self.measurement_probability_for_xy.pdf((measurement[0], measurement[1], measurement[2])) 
+        return np.apply_along_axis(_probability, axis=0, arr=measurements)
 
     def get_locations_for_angle_measurements(self):
         def _get_location(particle):
@@ -163,8 +185,26 @@ class ParticleFilter(object):
         return np.apply_along_axis(
             lambda m: self.measurement_probability_for_theta.pdf((m[0], m[1], m[2])), axis=0, arr=measurements)
 
-    def resample_particles(self):
-        pass
+    def normalize_weights(self):
+        normalization_factor = np.sum(self.weights)
+        self.weights = self.weights / normalization_factor
+
+    def resample_particles(self):        
+        weights_cdf = np.cumsum(self.weights)
+        random_number = np.random.uniform(0., 1/self.number_of_particles)
+        resampled_particle_indeces = []
+        for i in range(self.number_of_particles):
+            idx = np.min(np.argwhere(weights_cdf >= random_number + (i - 1) / self.number_of_particles))
+            resampled_particle_indeces.append(idx)
+        self.particles = self.particles[:,resampled_particle_indeces]
+
+    def visualize(self):
+        _image = self.undistorted_image.copy()
+        for particle in self.particles_in_pixel_space:
+            x, y = particle[0], particle[1]
+            if self.check_pixel_coordinates(x, y):
+                cv2.circle(_image, center=(y, x), radius=4, color=(100, 250, 0))
+        cv2.imshow(self.window, _image)
 
     def wait_key(self):
         return cv2.waitKey(50)

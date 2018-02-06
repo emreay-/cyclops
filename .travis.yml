@@ -47,10 +47,10 @@ install:
   
   # We need to return to the repo "root" folder, so we can then 'cd' into the project folder.
   - cd ../../
-  - cd cycplops
+  - sudo apt-get install tree
   - pwd
-  - make installDependencies
+  - tree
 
-script:
-  - pwd
-  - nosetests -s .
+# script:
+  # - pwd
+  # - nosetests -s .

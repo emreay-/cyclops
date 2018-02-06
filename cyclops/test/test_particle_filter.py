@@ -75,7 +75,7 @@ class ParticleFilterTests(CyclopsUnitTestBase):
                       [self.__object.reference_distance * math.sin(math.pi / 4.0)]]), 3).reshape(2, 3)
         self.__measurements_to_compute_angle_probability = np.zeros((3, 5))
         self.__expected_probabilities_for_angle_measurements = np.array([63.49363593] * 5)
-        self.__expected_weights_after_measurement_update = np.array([31.74681797] * 5)
+        self.__expected_weights_after_measurement_update = np.array([0.2] * 5)
 
     @classmethod
     def tearDownClass(cls):
@@ -200,6 +200,13 @@ class ParticleFilterTests(CyclopsUnitTestBase):
         self.__object.run_measurement_update()
         np.testing.assert_almost_equal(
             self.__object.weights, self.__expected_weights_after_measurement_update)
+
+    # def test_resample_particles(self):
+        # self.__object.create_density_functions()
+        # self.reset_particles()
+        # self.__object.weights = self.__expected_weights_after_measurement_update
+        # self.__object.resample_particles()
+        # print(self.__object.)
 
 
 if __name__ == '__main__':

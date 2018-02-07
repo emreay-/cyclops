@@ -48,7 +48,7 @@ install:
   # We need to return to the repo "root" folder, so we can then 'cd' into the project folder.
   - cd ../../
   - pwd
-  - source env
+  - source environment
   - make installDependencies
 
 # script:

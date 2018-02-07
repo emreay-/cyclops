@@ -123,10 +123,10 @@ class VideoCaptureInterface(object):
 
     def get_top_left_bottom_right_points_from_roi(self):
         (r1,r2),(r3,r4) = self.roi
-        y1 = min(r1,r3)
-        y2 = max(r1,r3)
-        x1 = min(r2,r4)
-        x2 = max(r2,r4)
+        x1 = min(r1,r3)
+        x2 = max(r1,r3)
+        y1 = min(r2,r4)
+        y2 = max(r2,r4)
         return (x1, y1), (x2, y2)
     
     @staticmethod
@@ -194,7 +194,7 @@ class Scaler(VideoCaptureInterface):
         print('Selected region: {}'.format(self.roi))
 
     def right_click_process(self, x, y):
-        super().right_click_process()
+        super().right_click_process(x, y)
         self.destroy_non_main_windows()
 
     def process_image(self):
@@ -212,7 +212,7 @@ class Scaler(VideoCaptureInterface):
             self.is_cropped = True
             if self.is_region_selected():
                 (x1, y1), (x2, y2) = self.get_top_left_bottom_right_points_from_roi()
-                self.cropped_image = self.processed_image[x1:x2,y1:y2]
+                self.cropped_image = self.processed_image[y1:y2, x1:x2]
                 cv2.namedWindow(self.cropped_window, cv2.WINDOW_AUTOSIZE)
                 cv2.imshow(self.cropped_window, self.cropped_image)
 
@@ -269,7 +269,7 @@ class MemberInitializer(VideoCaptureInterface):
             self.is_cropped = True
             if len(self.roi) == 2:
                 (x1, y1), (x2, y2) = self.get_top_left_bottom_right_points_from_roi()
-                self.cropped_image = self.image[x1:x2,y1:y2]
+                self.cropped_image = self.image[y1:y2, x1:x2]
                 cv2.namedWindow(self.cropped_window, cv2.WINDOW_AUTOSIZE)
                 cv2.imshow(self.cropped_window, self.add_padding(self.cropped_image))
 
@@ -294,12 +294,7 @@ class MemberInitializer(VideoCaptureInterface):
     def location_initialization_key_processor(self, key):
         if key == Keys.enter:
             if len(self.roi) == 2:
-                (r1,r2),(r3,r4) = self.roi
-                y1 = min(r1,r3)
-                y2 = max(r1,r3)
-                x1 = min(r2,r4)
-                x2 = max(r2,r4)
-
+                (x1, y1), (x2, y2) = self.get_top_left_bottom_right_points_from_roi()
                 self.init_location = ((x1 + x2) / 2.0, (y1 + y2) / 2.0) 
                 self.destroy_windows()
                 self.is_done = True

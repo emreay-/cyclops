@@ -2,6 +2,7 @@ import os
 import numpy as np
 import cv2
 from math import ceil
+import logging
 
 from cyclops.type_hints import *
 from cyclops.utility import Scaler, Member
@@ -213,5 +214,6 @@ class UserInterface(object):
 
 
 if __name__=="__main__":
+    logging.basicConfig(level=logging.DEBUG)
     interface = UserInterface()
     interface.run()

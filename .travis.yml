@@ -47,10 +47,9 @@ install:
   
   # We need to return to the repo "root" folder, so we can then 'cd' into the project folder.
   - cd ../../
-  - sudo apt-get install tree
   - pwd
-  - tree
+  - source env
+  - make installDependencies
 
 # script:
-  # - pwd
-  # - nosetests -s .
+  - nosetests -s .

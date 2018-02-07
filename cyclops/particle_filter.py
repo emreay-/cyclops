@@ -2,6 +2,7 @@ import os
 import json
 import yaml
 import math
+import logging
 
 import numpy as np
 import cv2
@@ -58,6 +59,7 @@ class ParticleFilter(object):
             self.distortion = np.array(distortion)
 
     def initialize_particles(self, start_location: coordinate):
+        logging.debug('Particle Initialization')
         start_location = self.convert_pixel_space_to_physical_space(start_location)
         self.particles = np.transpose(np.random.multivariate_normal(
             list(start_location) + [0.0], self.inital_location_covariance, self.number_of_particles))
@@ -66,7 +68,7 @@ class ParticleFilter(object):
 
     def convert_pixel_space_to_physical_space(self, location: coordinate):
         x = (location[0] - self.frame_translation[0]) / self.camera_scale
-        y = (-1 * location[1] + self.frame_translation[1]) / self.camera_scale
+        y = (-1) * (location[1] + self.frame_translation[1]) / self.camera_scale
         return x, y
 
     def apply_mode_to_particle_thetas(self):
@@ -79,11 +81,11 @@ class ParticleFilter(object):
         self.create_density_functions()
         while True:
             self.get_undistorted_image()
+            self.convert_particles()
             self.run_process_model()
             self.run_measurement_update()
             self.resample_particles()
             self.visualize()
-            print('here')
             key = self.wait_key()
     
     def create_video_capture(self):
@@ -114,11 +116,13 @@ class ParticleFilter(object):
         self.particles_in_pixel_space = self.convert_array_from_physical_to_pixel_space(self.particles)
 
     def run_process_model(self):
+        logging.debug('Process')
         self.process_noise = np.transpose(np.random.multivariate_normal(
             mean=(0., 0., 0.), cov=self.process_covariance, size=self.number_of_particles))
         self.particles += self.process_noise
     
     def run_measurement_update(self):
+        logging.debug('Measurement Update')
         self.convert_particles()
         measurements_for_xy = self.get_measurements(self.particles_in_pixel_space)
         weights_xy = self.get_probabilities_for_xy_measurements(measurements_for_xy)
@@ -129,7 +133,8 @@ class ParticleFilter(object):
         measurements_for_angle = self.get_measurements(pixel_locations_for_angle_measurement)
         weights_theta = self.get_probabilities_for_angle_measurements(measurements_for_angle)
 
-        self.weights = np.mean(np.array([weights_xy, weights_theta]), axis=0)
+        self.weights = np.mean(np.array([weights_xy, 0.2*weights_theta]), axis=0)
+        # self.weights = weights_xy
         self.normalize_weights()
 
     def convert_array_from_physical_to_pixel_space(self, array: np.array):
@@ -190,6 +195,7 @@ class ParticleFilter(object):
         self.weights = self.weights / normalization_factor
 
     def resample_particles(self):        
+        logging.debug('Resample')
         weights_cdf = np.cumsum(self.weights)
         random_number = np.random.uniform(0., 1/self.number_of_particles)
         resampled_particle_indeces = []
@@ -197,13 +203,21 @@ class ParticleFilter(object):
             idx = np.min(np.argwhere(weights_cdf >= random_number + (i - 1) / self.number_of_particles))
             resampled_particle_indeces.append(idx)
         self.particles = self.particles[:,resampled_particle_indeces]
+        self.apply_mode_to_particle_thetas()
 
     def visualize(self):
         _image = self.undistorted_image.copy()
-        for particle in self.particles_in_pixel_space:
-            x, y = particle[0], particle[1]
+        for i in range(self.number_of_particles):
+            x, y = self.particles_in_pixel_space[0, i], self.particles_in_pixel_space[1, i]
             if self.check_pixel_coordinates(x, y):
-                cv2.circle(_image, center=(y, x), radius=4, color=(100, 250, 0))
+                cv2.circle(_image, center=(x, y), radius=2, color=(100, 250, 0), thickness=-1)
+        mean_x = int(np.mean(self.particles_in_pixel_space[0, :]))
+        mean_y = int(np.mean(self.particles_in_pixel_space[1, :]))
+        mean_theta = -np.mean(self.particles[2, :])
+        d = 40
+        cv2.line(_image, pt1=(mean_x, mean_y), pt2=(int(mean_x + d*math.cos(mean_theta)), 
+            int(mean_y + d*math.sin(mean_theta))), color=(200, 0, 0), thickness=2)
+
         cv2.imshow(self.window, _image)
 
     def wait_key(self):

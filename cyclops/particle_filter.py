@@ -68,7 +68,7 @@ class ParticleFilter(object):
 
     def convert_pixel_space_to_physical_space(self, location: coordinate):
         x = (location[0] - self.frame_translation[0]) / self.camera_scale
-        y = (-1) * (location[1] + self.frame_translation[1]) / self.camera_scale
+        y = (-1 * location[1] + self.frame_translation[1]) / self.camera_scale
         return x, y
 
     def apply_mode_to_particle_thetas(self):
@@ -100,7 +100,7 @@ class ParticleFilter(object):
             mean=self.color_to_track, cov=self.measurement_covariance)
         
         self.measurement_probability_for_theta = multivariate_normal(
-            mean=(0, 0, 0), cov=self.measurement_covariance)
+            mean=(73.82, 35.39, 169.31), cov=self.measurement_covariance)
 
     def get_undistorted_image(self):
         self.capture_image()
@@ -145,7 +145,7 @@ class ParticleFilter(object):
             axis=0, arr=array[0, :])
 
         converted_array[1, :] = np.apply_along_axis(
-            lambda y: -1 * (y * self.camera_scale + self.frame_translation[1]),
+            lambda y: (-1 * y * self.camera_scale) + self.frame_translation[1],
             axis=0, arr=array[1, :])
         return converted_array.astype(int)
 
@@ -207,16 +207,26 @@ class ParticleFilter(object):
 
     def visualize(self):
         _image = self.undistorted_image.copy()
+        
         for i in range(self.number_of_particles):
             x, y = self.particles_in_pixel_space[0, i], self.particles_in_pixel_space[1, i]
             if self.check_pixel_coordinates(x, y):
                 cv2.circle(_image, center=(x, y), radius=2, color=(100, 250, 0), thickness=-1)
+        
         mean_x = int(np.mean(self.particles_in_pixel_space[0, :]))
         mean_y = int(np.mean(self.particles_in_pixel_space[1, :]))
         mean_theta = -np.mean(self.particles[2, :])
-        d = 40
-        cv2.line(_image, pt1=(mean_x, mean_y), pt2=(int(mean_x + d*math.cos(mean_theta)), 
-            int(mean_y + d*math.sin(mean_theta))), color=(200, 0, 0), thickness=2)
+        line_length_pixels = 40
+        cv2.line(_image, 
+            pt1=(mean_x, mean_y), 
+            pt2=(int(mean_x + line_length_pixels*math.cos(mean_theta)), 
+                 int(mean_y + line_length_pixels*math.sin(mean_theta))), 
+            color=(200, 0, 0), thickness=2)
+
+        mean_x_physical, mean_y_physical = \
+            self.convert_pixel_space_to_physical_space((mean_x, mean_y))
+        cv2.putText(_image, '{:.2f}, {:.2f}'.format(mean_x_physical, mean_y_physical), 
+            (mean_x, mean_y), cv2.FONT_HERSHEY_SIMPLEX, 1, thickness=2, color=(200, 25, 200))
 
         cv2.imshow(self.window, _image)
 

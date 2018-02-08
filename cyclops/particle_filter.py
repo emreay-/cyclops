@@ -232,3 +232,4 @@ class ParticleFilter(object):
 
     def wait_key(self):
         return cv2.waitKey(50)
+        

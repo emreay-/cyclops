@@ -1,4 +1,4 @@
 export CYCLOPS_PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export CYCLOPS_DIR=${CYCLOPS_PROJ_DIR}/cyclops
 
-export PYTHONPATH=${PYTHONPATH}:${CYCLOPS_DIR}
+export PYTHONPATH=${PYTHONPATH}:${CYCLOPS_PROJ_DIR}

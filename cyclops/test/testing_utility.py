@@ -51,7 +51,7 @@ def write_dummy_parameters_file(*args):
     "number_of_particles": 1000,
     "process_covariance": [1e-2, 1e-2, 1e-2],
     "measurement_covariance": [1e-2, 1e-2, 1e-2],
-    "inital_location_covariance": [1e-2, 1e-2, 1e-2],
+    "inital_xy_covariance": [1e-2, 1e-2],
     "reference_distance": 0.05
  }''')
 

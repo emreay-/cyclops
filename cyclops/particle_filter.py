@@ -44,7 +44,7 @@ class ParticleFilter(object):
             self.number_of_particles = parameters['number_of_particles']
             self.process_covariance = np.diag(parameters['process_covariance'])
             self.measurement_covariance = np.diag(parameters['measurement_covariance'])
-            self.inital_location_covariance = np.diag(parameters['inital_location_covariance'])
+            self.inital_xy_covariance = np.diag(parameters['inital_xy_covariance'])
             self.reference_distance = parameters['reference_distance']
 
     def check_camera_parameters_file(self):
@@ -61,9 +61,10 @@ class ParticleFilter(object):
     def initialize_particles(self, start_location: coordinate):
         logging.debug('Particle Initialization')
         start_location = self.convert_pixel_space_to_physical_space(start_location)
-        self.particles = np.transpose(np.random.multivariate_normal(
-            list(start_location) + [0.0], self.inital_location_covariance, self.number_of_particles))
-        self.apply_mode_to_particle_thetas()
+        self.particles = np.zeros((3, self.number_of_particles))
+        self.particles[:2, :] = np.transpose(np.random.multivariate_normal(
+            list(start_location), self.inital_xy_covariance, self.number_of_particles))
+        self.particles[2, :] = np.random.uniform(0.0, math.pi * 2, self.number_of_particles)
         self.weights = np.array([1.0] * self.number_of_particles)
 
     def convert_pixel_space_to_physical_space(self, location: coordinate):
@@ -133,7 +134,7 @@ class ParticleFilter(object):
         measurements_for_angle = self.get_measurements(pixel_locations_for_angle_measurement)
         weights_theta = self.get_probabilities_for_angle_measurements(measurements_for_angle)
 
-        self.weights = np.mean(np.array([weights_xy, 0.2*weights_theta]), axis=0)
+        self.weights = np.mean(np.array([weights_xy, weights_theta]), axis=0)
         # self.weights = weights_xy
         self.normalize_weights()
 
@@ -232,4 +233,3 @@ class ParticleFilter(object):
 
     def wait_key(self):
         return cv2.waitKey(50)
-        

@@ -147,6 +147,7 @@ class UserInterface(object):
 
         self.scale = None
         self.members = dict()
+        self.is_filter_running = False
     
     def create_buttons(self):
         for button_name, position_idx, text_offset in self.button_info:
@@ -188,7 +189,9 @@ class UserInterface(object):
                     print('There are no members yet, add members first.')
             
             if button_name == 'Start!':
-                if len(self.members) > 0:
+                if not self.is_filter_running and len(self.members) > 0:
+                    self.set_button_as_processed(button_name)
+                    self.is_filter_running = True
                     parameters_file = os.path.join(os.getenv('CYCLOPS_PROJ_DIR'), 'param', 'filter_parameters.json')
                     camera_parameters_file = os.path.join(os.getenv('CYCLOPS_PROJ_DIR'), 'param', 'trust.yaml')
                     particle_filter = ParticleFilter(parameters_file=parameters_file, 
@@ -197,8 +200,10 @@ class UserInterface(object):
                                                      color_to_track=self.members[1].color)
                     particle_filter.initialize_particles(self.members[1].initial_location)
                     particle_filter.run()
-                else:
+                elif not self.is_filter_running and len(self.members) == 0:
                     print('There are no members yet, add members first.')
+                else:
+                    print('It is already started.')
 
     def set_button_as_processed(self, button_name):
         self.window.buttons[button_name].background_color = self.button_color_when_processed

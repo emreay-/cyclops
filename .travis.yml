@@ -10,7 +10,6 @@ compiler:
   - gcc
   
 before_install:
-  - sudo apt-get update
   - pwd
   - export CYCLOPS_PROJ_DIR=$(pwd)
   - export CYCLOPS_DIR=${CYCLOPS_PROJ_DIR}/cyclops

@@ -5,6 +5,6 @@
     "number_of_particles": 1000,
     "process_covariance": [1e-3, 1e-3, 1e-3],
     "measurement_covariance": [2e2, 2e2, 2e2],
-    "inital_location_covariance": [1e-3, 1e-3, 1e-3],
+    "inital_xy_covariance": [1e-3, 1e-3],
     "reference_distance": 0.05
  }

@@ -132,8 +132,6 @@ class ParticleFilter(object):
         self.measurement_probability_for_theta = multivariate_normal(
             mean=(73.82, 35.39, 169.31), cov=self.measurement_covariance)
 
-
-
     def get_undistorted_image(self):
         self.capture_image()
         self.undistort_image()
@@ -257,8 +255,10 @@ class ParticleFilter(object):
 
         mean_x_physical, mean_y_physical = \
             self.convert_pixel_space_to_physical_space((mean_x, mean_y))
-        cv2.putText(_image, '{:.2f}, {:.2f}'.format(mean_x_physical, mean_y_physical), 
-            (mean_x, mean_y), cv2.FONT_HERSHEY_SIMPLEX, 1, thickness=2, color=(200, 25, 200))
+        cv2.putText(_image, '{:.2f}, {:.2f}, {:.1f}'.format(
+            mean_x_physical, mean_y_physical, math.degrees(-mean_theta)), 
+            (mean_x, mean_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, thickness=2, 
+            color=(200, 25, 200))
 
         cv2.imshow(self.window, _image)
 

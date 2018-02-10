@@ -134,11 +134,12 @@ class Window(object):
 class UserInterface(object):
 
     def __init__(self):
-        self.window = Window(name = 'Cyclops', number_of_rows_for_buttons = 4, number_of_cols_for_buttons = 1, 
+        self.window = Window(name = 'Cyclops', number_of_rows_for_buttons = 4, number_of_cols_for_buttons = 2, 
                              button_height = 60, button_width = 220, padding_vertical = 40, 
                              padding_horizontal = 40, footer_height = 100)
-        self.button_info = [('Get Scale', 1, (45, 40)) ,('Add Member', 2, (25, 40)), 
-                            ('Initialize', 3, (45, 40)), ('Start!', 4, (70, 40))]
+        self.button_info = [('Get Scale', 1, (45, 40)) ,('Add Member', 3, (25, 40)), 
+                            ('Initialize', 5, (45, 40)), ('Start!', 7, (70, 40)),
+                            ('Reset', 4, (70, 40))]
         self.button_color_when_not_yet_processed = (0, 255, 0)
         self.button_color_when_processed = (125, 0, 125)
         
@@ -194,16 +195,21 @@ class UserInterface(object):
                     self.is_filter_running = True
                     parameters_file = os.path.join(os.getenv('CYCLOPS_PROJ_DIR'), 'param', 'filter_parameters.json')
                     camera_parameters_file = os.path.join(os.getenv('CYCLOPS_PROJ_DIR'), 'param', 'trust.yaml')
-                    particle_filter = ParticleFilter(parameters_file=parameters_file, 
-                                                     camera_parameters_file=camera_parameters_file,
-                                                     camera_scale=self.scale, 
-                                                     color_to_track=self.members[1].color)
-                    particle_filter.initialize_particles(self.members[1].initial_location)
-                    particle_filter.run()
+                    self.particle_filter = ParticleFilter(parameters_file=parameters_file, 
+                                                          camera_parameters_file=camera_parameters_file,
+                                                          camera_scale=self.scale, 
+                                                          color_to_track=self.members[1].color)
+                    # self.particle_filter.initialize_particles(self.members[1].initial_location)
+                    self.particle_filter.initialize_particles()
+                    self.particle_filter.run()
                 elif not self.is_filter_running and len(self.members) == 0:
                     print('There are no members yet, add members first.')
                 else:
                     print('It is already started.')
+            
+            if button_name == 'Reset':
+                if self.is_filter_running:
+                    self.particle_filter.initialize_particles()
 
     def set_button_as_processed(self, button_name):
         self.window.buttons[button_name].background_color = self.button_color_when_processed

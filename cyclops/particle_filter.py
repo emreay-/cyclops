@@ -40,12 +40,17 @@ class ParticleFilter(object):
             self.camera_source = parameters['camera_source']
             self.image_width = parameters['image_width']
             self.image_height = parameters['image_height']
-            self.frame_translation = [self.image_width // 2, self.image_height // 2]
             self.number_of_particles = parameters['number_of_particles']
             self.process_covariance = np.diag(parameters['process_covariance'])
             self.measurement_covariance = np.diag(parameters['measurement_covariance'])
             self.inital_xy_covariance = np.diag(parameters['inital_xy_covariance'])
             self.reference_distance = parameters['reference_distance']
+
+            self.frame_translation = [self.image_width // 2, self.image_height // 2]
+            self.configuration_space_x_min, self.configuration_space_y_min = \
+                self.convert_pixel_space_to_physical_space((0, 0))
+            self.configuration_space_x_max, self.configuration_space_y_max = \
+                self.convert_pixel_space_to_physical_space((self.image_width, self.image_height))
 
     def check_camera_parameters_file(self):
         return os.path.exists(self.camera_parameters_file)
@@ -58,19 +63,40 @@ class ParticleFilter(object):
             distortion = camera_info['distortion_coefficients']['data']
             self.distortion = np.array(distortion)
 
-    def initialize_particles(self, start_location: coordinate):
-        logging.debug('Particle Initialization')
-        start_location = self.convert_pixel_space_to_physical_space(start_location)
-        self.particles = np.zeros((3, self.number_of_particles))
-        self.particles[:2, :] = np.transpose(np.random.multivariate_normal(
-            list(start_location), self.inital_xy_covariance, self.number_of_particles))
-        self.particles[2, :] = np.random.uniform(0.0, math.pi * 2, self.number_of_particles)
-        self.weights = np.array([1.0] * self.number_of_particles)
-
     def convert_pixel_space_to_physical_space(self, location: coordinate):
         x = (location[0] - self.frame_translation[0]) / self.camera_scale
         y = (-1 * location[1] + self.frame_translation[1]) / self.camera_scale
         return x, y
+
+    def initialize_particles(self, start_location: pixel_coord = None):
+        logging.debug('Particle Initialization')
+        self.reset_particles_and_weights()
+        self.distribute_particle_angles_uniformly()
+
+        if start_location:
+            self.distribute_particle_positions_with_gaussian(start_location)
+        else:
+            self.distribute_particle_positions_uniformly()
+
+    def reset_particles_and_weights(self):
+        self.particles = np.zeros((3, self.number_of_particles))
+        self.weights = np.ones(self.number_of_particles)
+
+    def distribute_particle_positions_uniformly(self):
+        self.particles[0, :] = np.random.uniform(self.configuration_space_x_min, 
+                                                 self.configuration_space_x_max, 
+                                                 self.number_of_particles)
+        self.particles[1, :] = np.random.uniform(self.configuration_space_y_min, 
+                                                 self.configuration_space_y_max, 
+                                                 self.number_of_particles)
+
+    def distribute_particle_positions_with_gaussian(self, start_location: pixel_coord):
+        start_location = self.convert_pixel_space_to_physical_space(start_location)
+        self.particles[:2, :] = np.transpose(np.random.multivariate_normal(
+            list(start_location), self.inital_xy_covariance, self.number_of_particles))
+
+    def distribute_particle_angles_uniformly(self):
+        self.particles[2, :] = np.random.uniform(0.0, math.pi * 2, self.number_of_particles)
 
     def apply_mode_to_particle_thetas(self):
         self.particles[2, :] = np.apply_along_axis(

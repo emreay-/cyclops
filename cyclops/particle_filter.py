@@ -19,7 +19,8 @@ class ParticleFilter(object):
         self.camera_parameters_file = camera_parameters_file
         self.camera_scale = camera_scale
         self.color_to_track = color_to_track
-        
+        self.is_in_progress = False
+
         self.loader(self.check_parameters_file, self.load_parameters)
         self.loader(self.check_camera_parameters_file, self.load_camera_parameters)
     
@@ -106,14 +107,16 @@ class ParticleFilter(object):
         self.create_video_capture()
         self.create_window()
         self.create_density_functions()
-        while True:
+        self.is_in_progress = True
+
+        while self.is_in_progress:
             self.get_undistorted_image()
             self.convert_particles()
             self.run_process_model()
             self.run_measurement_update()
             self.resample_particles()
             self.visualize()
-            key = self.wait_key()
+            self.wait_key()
     
     def create_video_capture(self):
         self.video_capture = cv2.VideoCapture(self.camera_source)
@@ -128,6 +131,8 @@ class ParticleFilter(object):
         
         self.measurement_probability_for_theta = multivariate_normal(
             mean=(73.82, 35.39, 169.31), cov=self.measurement_covariance)
+
+
 
     def get_undistorted_image(self):
         self.capture_image()
@@ -259,3 +264,11 @@ class ParticleFilter(object):
 
     def wait_key(self):
         return cv2.waitKey(50)
+
+    @property
+    def is_in_progress(self):
+        return self._is_in_progress
+
+    @is_in_progress.setter
+    def is_in_progress(self, value: bool):
+        self._is_in_progress = value

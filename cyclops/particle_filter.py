@@ -19,6 +19,7 @@ class ParticleFilter(object):
         self.camera_parameters_file = camera_parameters_file
         self.camera_scale = camera_scale
         self.color_to_track = color_to_track
+        self.rear_color = (0, 0, 0)
         self.is_in_progress = False
 
         self.loader(self.check_parameters_file, self.load_parameters)
@@ -130,7 +131,7 @@ class ParticleFilter(object):
             mean=self.color_to_track, cov=self.measurement_covariance)
         
         self.measurement_probability_for_theta = multivariate_normal(
-            mean=(73.82, 35.39, 169.31), cov=self.measurement_covariance)
+            mean=self.rear_color, cov=self.measurement_covariance)
 
     def get_undistorted_image(self):
         self.capture_image()
@@ -163,8 +164,8 @@ class ParticleFilter(object):
         measurements_for_angle = self.get_measurements(pixel_locations_for_angle_measurement)
         weights_theta = self.get_probabilities_for_angle_measurements(measurements_for_angle)
 
-        self.weights = np.mean(np.array([weights_xy, weights_theta]), axis=0)
-        # self.weights = weights_xy
+        # self.weights = np.mean(np.array([weights_xy, weights_theta]), axis=0)
+        self.weights = np.multiply(weights_xy, weights_theta)
         self.normalize_weights()
 
     def convert_array_from_physical_to_pixel_space(self, array: np.array):
@@ -212,7 +213,7 @@ class ParticleFilter(object):
                 delta_x = self.reference_distance * math.cos(particle[2])
                 delta_y = self.reference_distance * math.sin(particle[2])
             
-            return np.array([particle[0] + delta_x, particle[1] + delta_y])
+            return np.array([particle[0] - delta_x, particle[1] - delta_y])
         
         return np.apply_along_axis(_get_location, axis=0, arr=self.particles)
 
@@ -237,27 +238,34 @@ class ParticleFilter(object):
 
     def visualize(self):
         _image = self.undistorted_image.copy()
-        
+        _belief_line_length_pixels = 40
+        _particle_line_length_pixels = 20
+
         for i in range(self.number_of_particles):
-            x, y = self.particles_in_pixel_space[0, i], self.particles_in_pixel_space[1, i]
+            x, y, theta = self.particles_in_pixel_space[0, i], \
+                          self.particles_in_pixel_space[1, i], \
+                          -self.particles_in_pixel_space[2, i]
             if self.check_pixel_coordinates(x, y):
-                cv2.circle(_image, center=(x, y), radius=2, color=(100, 250, 0), thickness=-1)
+                cv2.arrowedLine(_image, pt1=(x, y), 
+                    pt2=(int(x + _particle_line_length_pixels * math.cos(theta)),
+                         int(y + _particle_line_length_pixels * math.sin(theta))), 
+                    color=(100, 250, 0), thickness=1)
         
-        mean_x = int(np.mean(self.particles_in_pixel_space[0, :]))
-        mean_y = int(np.mean(self.particles_in_pixel_space[1, :]))
-        mean_theta = -np.mean(self.particles[2, :])
-        line_length_pixels = 40
-        cv2.line(_image, 
-            pt1=(mean_x, mean_y), 
-            pt2=(int(mean_x + line_length_pixels*math.cos(mean_theta)), 
-                 int(mean_y + line_length_pixels*math.sin(mean_theta))), 
+        median_x = int(np.median(self.particles_in_pixel_space[0, :]))
+        median_y = int(np.median(self.particles_in_pixel_space[1, :]))
+        mean_theta = -np.median(self.particles[2, :])
+        
+        cv2.arrowedLine(_image, 
+            pt1=(median_x, median_y), 
+            pt2=(int(median_x + _belief_line_length_pixels * math.cos(mean_theta)), 
+                 int(median_y + _belief_line_length_pixels * math.sin(mean_theta))), 
             color=(200, 0, 0), thickness=2)
 
-        mean_x_physical, mean_y_physical = \
-            self.convert_pixel_space_to_physical_space((mean_x, mean_y))
+        median_x_physical, median_y_physical = \
+            self.convert_pixel_space_to_physical_space((median_x, median_y))
         cv2.putText(_image, '{:.2f}, {:.2f}, {:.1f}'.format(
-            mean_x_physical, mean_y_physical, math.degrees(-mean_theta)), 
-            (mean_x, mean_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, thickness=2, 
+            median_x_physical, median_y_physical, math.degrees(-mean_theta)), 
+            (median_x, median_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, thickness=2, 
             color=(200, 25, 200))
 
         cv2.imshow(self.window, _image)

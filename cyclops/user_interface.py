@@ -181,16 +181,16 @@ class UserInterface(object):
             
             if button_name == 'Initialize':
                 if len(self.members) > 0:
-                    for member in self.members.values():
-                        member.initialize_location()
-                        print(member.initial_location)
+                    # for member in self.members.values():
+                    self.members[1].initialize_location()
+                    print(self.members[1].initial_location)
 
                     self.set_button_as_processed(button_name)
                 else:
                     print('There are no members yet, add members first.')
             
             if button_name == 'Start!':
-                if not self.is_filter_running and len(self.members) > 0:
+                if not self.is_filter_running and len(self.members) > 1:
                     self.set_button_as_processed(button_name)
                     self.is_filter_running = True
                     parameters_file = os.path.join(os.getenv('CYCLOPS_PROJ_DIR'), 'param', 'filter_parameters.json')
@@ -200,6 +200,11 @@ class UserInterface(object):
                                                           camera_scale=self.scale, 
                                                           color_to_track=self.members[1].color)
                     # self.particle_filter.initialize_particles(self.members[1].initial_location)
+                    self.particle_filter.rear_color = self.members[2].color
+                    print('Color to track:')
+                    print(self.particle_filter.color_to_track)
+                    print('Color rear:')
+                    print(self.particle_filter.rear_color)
                     self.particle_filter.initialize_particles()
                     self.particle_filter.run()
                 elif not self.is_filter_running and len(self.members) == 0:

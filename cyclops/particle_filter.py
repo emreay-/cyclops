@@ -72,7 +72,7 @@ class ParticleFilter(object):
 
     def initialize_particles(self, start_location: pixel_coord = None):
         logging.debug('Particle Initialization')
-        self.reset_particles_and_weights()
+        self.reset_filter()
         self.distribute_particle_angles_uniformly()
 
         if start_location:
@@ -80,9 +80,12 @@ class ParticleFilter(object):
         else:
             self.distribute_particle_positions_uniformly()
 
-    def reset_particles_and_weights(self):
+    def reset_filter(self):
         self.particles = np.zeros((3, self.number_of_particles))
         self.weights = np.ones(self.number_of_particles)
+        self.previous_displacement = 0.0
+        self.previous_delta_heading = 0.0
+        self.median_belief = np.array([0.] * 3)
 
     def distribute_particle_positions_uniformly(self):
         self.particles[0, :] = np.random.uniform(self.configuration_space_x_min, 
@@ -116,6 +119,7 @@ class ParticleFilter(object):
             self.run_process_model()
             self.run_measurement_update()
             self.resample_particles()
+            self.update_belief()
             self.visualize()
             self.wait_key()
     
@@ -148,9 +152,17 @@ class ParticleFilter(object):
 
     def run_process_model(self):
         logging.debug('Process')
+        
+        def get_deltas(theta):
+            return self.previous_displacement * math.cos(theta), \
+                   self.previous_displacement * math.sin(theta), \
+                   self.previous_delta_heading
+
+        get_particle_deltas = np.vectorize(get_deltas)
+        self.delta = get_particle_deltas(self.particles[2, :])
         self.process_noise = np.transpose(np.random.multivariate_normal(
             mean=(0., 0., 0.), cov=self.process_covariance, size=self.number_of_particles))
-        self.particles += self.process_noise
+        self.particles += (self.delta + self.process_noise)
     
     def run_measurement_update(self):
         logging.debug('Measurement Update')
@@ -235,6 +247,15 @@ class ParticleFilter(object):
             resampled_particle_indeces.append(idx)
         self.particles = self.particles[:,resampled_particle_indeces]
         self.apply_mode_to_particle_thetas()
+
+    def update_belief(self):
+        _median_belief = np.apply_along_axis(np.median, axis=1, arr=self.particles)
+        _delta_median = np.subtract(_median_belief, self.median_belief)
+        if max(_delta_median[0], _delta_median[1]) < 0.1:
+            self.previous_displacement = math.sqrt(_delta_median[0] ** 2 + _delta_median[1] ** 2)
+            self.previous_delta_heading = _delta_median[2, ]
+            self.median_belief = _median_belief
+            print(self.previous_displacement, self.previous_delta_heading)
 
     def visualize(self):
         _image = self.undistorted_image.copy()

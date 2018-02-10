@@ -67,12 +67,12 @@ class ParticleFilterTests(CyclopsUnitTestBase):
         self.__measurements_to_compute_xy_probability = np.repeat(np.array(self.__color_to_track).reshape(3,1), 5).reshape(3, 5)
         self.__expected_probabilities_for_xy_measurements = np.array([63.49363593] * 5)
         self.__expected_locations_for_angle_measurements_theta_0 = np.repeat(
-            np.array([[self.__object.reference_distance],[0.]]), 3).reshape(2, 3)
+            np.array([[-self.__object.reference_distance],[0.]]), 3).reshape(2, 3)
         self.__expected_locations_for_angle_measurements_theta_90 = np.repeat(
-            np.array([[0.],[self.__object.reference_distance]]), 3).reshape(2, 3)
+            np.array([[0.],[-self.__object.reference_distance]]), 3).reshape(2, 3)
         self.__expected_locations_for_angle_measurements_theta_45 = np.repeat(
-            np.array([[self.__object.reference_distance * math.cos(math.pi / 4.0)],
-                      [self.__object.reference_distance * math.sin(math.pi / 4.0)]]), 3).reshape(2, 3)
+            np.array([[-self.__object.reference_distance * math.cos(math.pi / 4.0)],
+                      [-self.__object.reference_distance * math.sin(math.pi / 4.0)]]), 3).reshape(2, 3)
         self.__measurements_to_compute_angle_probability = np.zeros((3, 5))
         self.__expected_probabilities_for_angle_measurements = np.array([63.49363593] * 5)
         self.__expected_weights_after_measurement_update = np.array([0.2] * 5)

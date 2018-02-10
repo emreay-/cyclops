@@ -1,10 +1,10 @@
 .PHONY: installDependencies
 installDependencies:
-		pip install pyyaml
-		pip install imutils
-		pip install scipy
-		pip install numpy
-		pip install nose
+		sudo pip3 install pyyaml
+		sudo pip3 install imutils
+		sudo pip3 install scipy
+		sudo pip3 install numpy
+		sudo pip3 install nose
 		sudo apt-get install ffmpeg
 
 .SILENT:

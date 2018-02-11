@@ -311,6 +311,7 @@ class Member:
     def __init__(self):
         self._front_color = None
         self._rear_color = None
+        self._init_location = None
         self._id = Member.members
         Member.members += 1
 

@@ -125,7 +125,7 @@ class Window(object):
                  ((2 * self.footer_elements_counter) - 1) * _radius + \
                  (self.footer_elements_counter - 1) * self.padding_footer
             _y = self.height - (self.footer_height // 2)
-            # cv2.circle(self.canvas, (_x, _y), _radius, color, thickness=-1)
+
             cv2.ellipse(self.canvas, center=(_x, _y), axes=(_radius, _radius), 
                         angle=0, startAngle=0, endAngle=-180, color=front_color, thickness=-1)
             cv2.ellipse(self.canvas, center=(_x, _y), axes=(_radius, _radius), 
@@ -137,12 +137,12 @@ class Window(object):
 class UserInterface(object):
 
     def __init__(self):
-        self.window = Window(name = 'Cyclops', number_of_rows_for_buttons = 4, number_of_cols_for_buttons = 2, 
+        self.window = Window(name = 'Cyclops', number_of_rows_for_buttons = 5, number_of_cols_for_buttons = 1, 
                              button_height = 60, button_width = 220, padding_vertical = 40, 
                              padding_horizontal = 40, footer_height = 100)
-        self.button_info = [('Get Scale', 1, (45, 40)) ,('Add Member', 3, (25, 40)), 
-                            ('Initialize', 5, (45, 40)), ('Start!', 7, (70, 40)),
-                            ('Reset', 4, (70, 40))]
+        self.button_info = [('Get Scale', 1, (45, 40)) ,('Add Member', 2, (25, 40)), 
+                            ('Initialize', 3, (45, 40)), ('Start!', 4, (70, 40)),
+                            ('Reset', 5, (70, 40))]
         self.button_color_when_not_yet_processed = (0, 255, 0)
         self.button_color_when_processed = (125, 0, 125)
         
@@ -185,10 +185,7 @@ class UserInterface(object):
             
             if button_name == 'Initialize':
                 if len(self.members) > 0:
-                    # for member in self.members.values():
                     self.members[0].initialize_location()
-                    print(self.members[0].initial_location)
-
                     self.set_button_as_processed(button_name)
                 else:
                     print('There are no members yet, add members first.')
@@ -203,10 +200,13 @@ class UserInterface(object):
                                                           camera_parameters_file=camera_parameters_file,
                                                           camera_scale=self.scale, 
                                                           color_to_track=self.members[0].front_color)
-                    # self.particle_filter.initialize_particles(self.members[1].initial_location)
+                    if self.members[0].initial_location:
+                        self.particle_filter.initialize_particles(self.members[1].initial_location)
+                
                     self.particle_filter.rear_color = self.members[0].rear_color
                     self.particle_filter.initialize_particles()
                     self.particle_filter.run()
+                
                 elif not self.is_filter_running and len(self.members) == 0:
                     print('There are no members yet, add members first.')
                 else:

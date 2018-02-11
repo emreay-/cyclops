@@ -117,7 +117,7 @@ class Window(object):
                 return button_name
         return None
 
-    def add_colored_box_in_footer(self, color: color_type):
+    def add_member_in_footer(self, front_color: color_type, rear_color: color_type):
         if self.footer_elements_counter != self.number_of_elements_in_footer:
             self.footer_elements_counter += 1
             _radius = self.footer_element_size // 2
@@ -125,8 +125,11 @@ class Window(object):
                  ((2 * self.footer_elements_counter) - 1) * _radius + \
                  (self.footer_elements_counter - 1) * self.padding_footer
             _y = self.height - (self.footer_height // 2)
-
-            cv2.circle(self.canvas, (_x, _y), _radius, color, thickness=-1)
+            # cv2.circle(self.canvas, (_x, _y), _radius, color, thickness=-1)
+            cv2.ellipse(self.canvas, center=(_x, _y), axes=(_radius, _radius), 
+                        angle=0, startAngle=0, endAngle=-180, color=front_color, thickness=-1)
+            cv2.ellipse(self.canvas, center=(_x, _y), axes=(_radius, _radius), 
+                        angle=0, startAngle=0, endAngle=180, color=rear_color, thickness=-1)
             cv2.putText(self.canvas, 'M:{}'.format(self.footer_elements_counter), 
                         (_x - _radius, _y + _radius // 3), self.default_font, 0.8, (0,0,0), 2)
 
@@ -169,11 +172,12 @@ class UserInterface(object):
                 if len(self.members) in range(0,3):
                     member = Member()
                     member.initialize_color()
-                    if member.color:
+                    if member.front_color:
                         self.members[member.id] = member
                         if len(self.members) in range(1, 4):
                             self.set_button_as_processed(button_name)
-                            self.window.add_colored_box_in_footer(member.color)
+                            self.window.add_member_in_footer(member.front_color, 
+                                                             member.rear_color)
                     else:
                         print('Member color is not initialized')
                 else:
@@ -182,15 +186,15 @@ class UserInterface(object):
             if button_name == 'Initialize':
                 if len(self.members) > 0:
                     # for member in self.members.values():
-                    self.members[1].initialize_location()
-                    print(self.members[1].initial_location)
+                    self.members[0].initialize_location()
+                    print(self.members[0].initial_location)
 
                     self.set_button_as_processed(button_name)
                 else:
                     print('There are no members yet, add members first.')
             
             if button_name == 'Start!':
-                if not self.is_filter_running and len(self.members) > 1:
+                if not self.is_filter_running and len(self.members) > 0:
                     self.set_button_as_processed(button_name)
                     self.is_filter_running = True
                     parameters_file = os.path.join(os.getenv('CYCLOPS_PROJ_DIR'), 'param', 'filter_parameters.json')
@@ -198,13 +202,9 @@ class UserInterface(object):
                     self.particle_filter = ParticleFilter(parameters_file=parameters_file, 
                                                           camera_parameters_file=camera_parameters_file,
                                                           camera_scale=self.scale, 
-                                                          color_to_track=self.members[1].color)
+                                                          color_to_track=self.members[0].front_color)
                     # self.particle_filter.initialize_particles(self.members[1].initial_location)
-                    self.particle_filter.rear_color = self.members[2].color
-                    print('Color to track:')
-                    print(self.particle_filter.color_to_track)
-                    print('Color rear:')
-                    print(self.particle_filter.rear_color)
+                    self.particle_filter.rear_color = self.members[0].rear_color
                     self.particle_filter.initialize_particles()
                     self.particle_filter.run()
                 elif not self.is_filter_running and len(self.members) == 0:

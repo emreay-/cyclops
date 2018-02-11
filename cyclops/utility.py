@@ -240,8 +240,8 @@ class Scaler(VideoCaptureInterface):
 
 class MemberInitializer(VideoCaptureInterface):
 
-    def __init__(self, cam_src = 0):
-        super().__init__(cam_src, main_window_name = 'Member Initializer')
+    def __init__(self, main_window_name = 'Member Initializer', cam_src = 0):
+        super().__init__(cam_src, main_window_name = main_window_name)
         self.cropped_window = 'Selected Area For Member Color'
         self.color_window = 'Selected Member Color'
 
@@ -309,19 +309,27 @@ class Member:
     members = int(0)
 
     def __init__(self):
-        self._color = None
-        Member.members += 1
+        self._front_color = None
+        self._rear_color = None
         self._id = Member.members
+        Member.members += 1
 
     def initialize_color(self):
-        self._color = MemberInitializer().get_member_color()
+        self._front_color = MemberInitializer(
+            'Select area for member front color').get_member_color()
+        self._rear_color = MemberInitializer(
+            'Select area for member rear color').get_member_color()
     
     def initialize_location(self):
         self._init_location = MemberInitializer().initialize_member_location()
 
     @property
-    def color(self):
-        return self._color
+    def front_color(self):
+        return self._front_color
+
+    @property
+    def rear_color(self):
+        return self._rear_color
 
     @property
     def id(self):

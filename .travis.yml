@@ -4,20 +4,25 @@ dist:
 sudo: required
 
 language:
-  - cpp
+  - python
 
-compiler:
-  - gcc
+python:
+  - "3.5"
+
+# compiler:
+#   - gcc
   
 before_install:
-  - pwd
   - export CYCLOPS_PROJ_DIR=$(pwd)
   - export CYCLOPS_DIR=${CYCLOPS_PROJ_DIR}/cyclops
   - export PYTHONPATH=${PYTHONPATH}:${CYCLOPS_PROJ_DIR}
 
 install:
+  - python --version
+  - python3 --version
   - cd $CYCLOPS_PROJ_DIR
   - make installDependencies
+  - sudo apt-get install -qq gcc-5.4 g++-5.4
 
 # OpenCV v3.0.0 (beta) install code (modified from orignal source: https://github.com/jayrambhia/Install-OpenCV)
 

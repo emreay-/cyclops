@@ -13,6 +13,8 @@ python:
 #   - gcc
   
 before_install:
+  - sudo apt-key update
+  - sudo apt-get update
   - export CYCLOPS_PROJ_DIR=$(pwd)
   - export CYCLOPS_DIR=${CYCLOPS_PROJ_DIR}/cyclops
   - export PYTHONPATH=${PYTHONPATH}:${CYCLOPS_PROJ_DIR}

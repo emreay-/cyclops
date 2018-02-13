@@ -1,6 +1,6 @@
 .PHONY: installDependencies
 installDependencies:
-		sudo apt-get install ffmpeg
+		sudo apt-get install -y ffmpeg
 		sudo pip install pyyaml
 		sudo pip install imutils
 		sudo pip install scipy

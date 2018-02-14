@@ -201,7 +201,7 @@ class UserInterface(object):
                                                           camera_scale=self.scale, 
                                                           color_to_track=self.members[0].front_color)
                     if self.members[0].initial_location:
-                        self.particle_filter.initialize_particles(self.members[1].initial_location)
+                        self.particle_filter.initialize_particles(self.members[0].initial_location)
                 
                     self.particle_filter.rear_color = self.members[0].rear_color
                     self.particle_filter.initialize_particles()

@@ -24,7 +24,7 @@ install:
   - python3 --version
   - cd $CYCLOPS_PROJ_DIR
   - make installDependencies
-  - sudo apt-get install -qq gcc-5.4 g++-5.4
+  - sudo apt-get install -qq gcc-4.9 g++-4.9
 
 # OpenCV v3.0.0 (beta) install code (modified from orignal source: https://github.com/jayrambhia/Install-OpenCV)
 

@@ -62,4 +62,6 @@ install:
   - pwd
 
 script:
+  - ls /usr/local/lib
+  - ls /usr/local/lib/python3.5/site_packages
   - nosetests -s .

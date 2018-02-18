@@ -63,5 +63,6 @@ install:
 
 script:
   - ls /usr/local/lib
-  - ls /usr/local/lib/python3.5/site_packages
+  - ls /usr/local/lib/python3.5/
+  - python3 $CYCLOPS_DIR/test/test_particle_filter.py
   - nosetests -s .

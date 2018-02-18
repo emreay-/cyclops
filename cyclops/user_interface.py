@@ -162,7 +162,7 @@ class UserInterface(object):
             button_name = self.window.match_pixel_coordinates_to_a_button(x, y)
             
             if button_name == 'Get Scale':
-                scaler = Scaler(0, '/home/vetenskap/workspace/cyclops/param/trust.yaml')
+                scaler = Scaler(0, os.getenv('CYCLOPS_CAMERA_PARAMETERS'))
                 self.scale = scaler.run()
                 print('Scale: {} px/meter'.format(self.scale))
                 if self.scale != None:
@@ -194,12 +194,12 @@ class UserInterface(object):
                 if not self.is_filter_running and len(self.members) > 0:
                     self.set_button_as_processed(button_name)
                     self.is_filter_running = True
-                    parameters_file = os.path.join(os.getenv('CYCLOPS_PROJ_DIR'), 'param', 'filter_parameters.json')
-                    camera_parameters_file = os.path.join(os.getenv('CYCLOPS_PROJ_DIR'), 'param', 'trust.yaml')
-                    self.particle_filter = ParticleFilter(parameters_file=parameters_file, 
-                                                          camera_parameters_file=camera_parameters_file,
-                                                          camera_scale=self.scale, 
-                                                          color_to_track=self.members[0].front_color)
+                    self.particle_filter = ParticleFilter(
+                        parameters_file=os.getenv('CYCLOPS_FILTER_PARAMETERS'), 
+                        camera_parameters_file=os.getenv('CYCLOPS_CAMERA_PARAMETERS'),
+                        camera_scale=self.scale, 
+                        color_to_track=self.members[0].front_color)
+                        
                     if self.members[0].initial_location:
                         self.particle_filter.initialize_particles(self.members[0].initial_location)
                 

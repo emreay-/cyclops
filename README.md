@@ -38,6 +38,6 @@ $ python3 user_interface.py
 
 In order to estimate the pose accurately, the used overhead camera should be calibrated (i.e. camera matrix and distortion coefficients should be known). This is fairly a simple process. Please refer: [OpenCV Camera Calibration](https://docs.opencv.org/3.1.0/dc/dbb/tutorial_py_calibration.html), [camera_calibration](https://pypi.python.org/pypi/camera_calibration). 
 
-## Scale Estimation
+### Scale Estimation
 
 Cyclops requires an A4 sized paper to estimate the scale (i.e. the number of pixels per meter [px/m]). Simply place the paper somewhere the camera can see, start cyclops with and navigate to `Get Scale` in the user interface. Drag a rectangle around the paper in the popped window. Then press `Space` and then `c` to see the results (i.e. two new popped up windows where they show the cropped rectange and detected paper contour with sizes). Then press `Enter` to continue. If you made a mistake, you can repeat the steps. 

@@ -1,4 +1,7 @@
 export CYCLOPS_PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export CYCLOPS_DIR=${CYCLOPS_PROJ_DIR}/cyclops
+export CYCLOPS_PARAM_DIR=${CYCLOPS_PROJ_DIR}/param
+export CYCLOPS_CAMERA_PARAMETERS=${CYCLOPS_PARAM_DIR}/camera.yaml
+export CYCLOPS_FILTER_PARAMETERS=${CYCLOPS_PARAM_DIR}/filter_parameters.json
 
 export PYTHONPATH=${PYTHONPATH}:${CYCLOPS_PROJ_DIR}

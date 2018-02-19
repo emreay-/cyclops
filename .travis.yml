@@ -9,9 +9,6 @@ language:
 python:
   - "3.5"
 
-# compiler:
-#   - gcc
-  
 before_install:
   - sudo apt-key update
   - sudo apt-get update
@@ -43,7 +40,7 @@ install:
   - cd build
   
 #   # Set build instructions for Ubuntu distro.
-  - cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D BUILD_NEW_PYTHON_SUPPORT=ON -D WITH_V4L=ON -D INSTALL_C_EXAMPLES=ON -D INSTALL_PYTHON_EXAMPLES=ON -D BUILD_EXAMPLES=ON -D WITH_QT=ON -D WITH_OPENGL=ON ..
+  - cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D BUILD_NEW_PYTHON_SUPPORT=ON -D WITH_V4L=ON -D INSTALL_C_EXAMPLES=ON -D INSTALL_PYTHON_EXAMPLES=ON -D BUILD_EXAMPLES=ON -D WITH_QT=ON -D WITH_OPENGL=ON -D PYTHON_INCLUDE_DIR=/usr/include/python3.5/ -D PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5.so -D PYTHON_PACKAGES_PATH=/usr/local/lib/python3.5/site-packages/ -D PYTHON_INCLUDE_DIR2=/usr/include/x86_64-linux-gnu/python3.5 -D PYTHON3_EXECUTABLE=/usr/bin/python3.5 -D PYTHON3_NUMPY_INCLUDE_DIRS= /usr/lib/python3.5/dist-packages/numpy/core/include/ ..
   
 #   # Run 'make' with four threads.
   - make -j4
@@ -64,5 +61,6 @@ install:
 script:
   - ls /usr/local/lib
   - ls /usr/local/lib/python3.5/
+  - find usr/local/lib -name "cv2.so"
   - python3 $CYCLOPS_DIR/test/test_particle_filter.py
   - nosetests -s .

@@ -198,12 +198,12 @@ class UserInterface(object):
                         parameters_file=os.getenv('CYCLOPS_FILTER_PARAMETERS'), 
                         camera_parameters_file=os.getenv('CYCLOPS_CAMERA_PARAMETERS'),
                         camera_scale=self.scale, 
-                        color_to_track=self.members[0].front_color)
+                        front_color=self.members[0].front_color,
+                        rear_color=self.members[0].rear_color)
                         
                     if self.members[0].initial_location:
                         self.particle_filter.initialize_particles(self.members[0].initial_location)
                 
-                    self.particle_filter.rear_color = self.members[0].rear_color
                     self.particle_filter.initialize_particles()
                     self.particle_filter.run()
                 

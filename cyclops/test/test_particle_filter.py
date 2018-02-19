@@ -28,11 +28,13 @@ class ParticleFilterTests(CyclopsUnitTestBase):
 
     def setUp(self):
         self.__camera_scale = 540.0
-        self.__color_to_track = (0, 255, 0)
+        self.__front_color = (0, 255, 0)
+        self.__rear_color = (0, 0, 0)
         self.__object = ParticleFilter(parameters_file = self.__parameters_file_path,
                                        camera_parameters_file = self.__camera_parameters_path,
                                        camera_scale = self.__camera_scale,
-                                       color_to_track = self.__color_to_track)
+                                       front_color = self.__front_color,
+                                       rear_color = self.__rear_color)
 
         self.__expected_camera_source = 0
         self.__expected_image_width = 640
@@ -64,7 +66,7 @@ class ParticleFilterTests(CyclopsUnitTestBase):
         self.__expected_measurements = np.array(object=[[100., 100., 100., 100.],
                                                         [150., 150., 150., 150.],
                                                         [200., 200., 200., 200.]])
-        self.__measurements_to_compute_xy_probability = np.repeat(np.array(self.__color_to_track).reshape(3,1), 5).reshape(3, 5)
+        self.__measurements_to_compute_xy_probability = np.repeat(np.array(self.__front_color).reshape(3,1), 5).reshape(3, 5)
         self.__expected_probabilities_for_xy_measurements = np.array([63.49363593] * 5)
         self.__expected_locations_for_angle_measurements_theta_0 = np.repeat(
             np.array([[-self.__object.reference_distance],[0.]]), 3).reshape(2, 3)
@@ -98,11 +100,13 @@ class ParticleFilterTests(CyclopsUnitTestBase):
 
     def test_init_with_empty_parameters_file(self):
         self.assertRaises(FileNotFoundError, ParticleFilter, tempfile.NamedTemporaryFile().name, 
-                          self.__camera_parameters_path, self.__camera_scale, self.__color_to_track)
+                          self.__camera_parameters_path, self.__camera_scale, self.__front_color, 
+                          self.__rear_color)
 
     def test_init_with_empty_camera_parameters_file(self): 
         self.assertRaises(FileNotFoundError, ParticleFilter, self.__parameters_file_path,
-                          tempfile.NamedTemporaryFile().name, self.__camera_scale, self.__color_to_track)
+                          tempfile.NamedTemporaryFile().name, self.__camera_scale, self.__front_color, 
+                          self.__rear_color)
 
     def test_load_parameters(self):
         self.assertEqual(self.__object.camera_source, self.__expected_camera_source)

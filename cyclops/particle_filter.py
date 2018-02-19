@@ -14,12 +14,13 @@ from cyclops.type_hints import *
 class ParticleFilter(object):
 
     def __init__(self, parameters_file: str, camera_parameters_file: str, 
-                 camera_scale: float, color_to_track: color_type):
+                 camera_scale: float, front_color: color_type, 
+                 rear_color: color_type):
         self.parameters_file = parameters_file
         self.camera_parameters_file = camera_parameters_file
         self.camera_scale = camera_scale
-        self.color_to_track = color_to_track
-        self.rear_color = (0, 0, 0)
+        self.front_color = front_color
+        self.rear_color = rear_color
         self.is_in_progress = False
 
         self.loader(self.check_parameters_file, self.load_parameters)
@@ -128,7 +129,7 @@ class ParticleFilter(object):
 
     def create_density_functions(self):
         self.measurement_probability_for_xy = multivariate_normal(
-            mean=self.color_to_track, cov=self.measurement_covariance)
+            mean=self.front_color, cov=self.measurement_covariance)
         
         self.measurement_probability_for_theta = multivariate_normal(
             mean=self.rear_color, cov=self.measurement_covariance)

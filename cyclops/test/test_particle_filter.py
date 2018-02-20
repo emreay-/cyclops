@@ -45,6 +45,7 @@ class ParticleFilterTests(CyclopsUnitTestBase):
         self.__expected_measurement_covariance = np.diag([1e-2, 1e-2, 1e-2])
         self.__expected_inital_xy_covariance = np.diag([1e-2, 1e-2])
         self.__expected_reference_distance = 0.05
+        self.__expected_server_port = 42420
         self.__expected_camera_matrix = np.reshape(np.array([696.019484, 0.000000, 349.918582, 
                                                              0.000000, 696.225875, 217.635331, 
                                                              0.000000, 0.000000, 1.000000]), (3, 3))
@@ -118,6 +119,7 @@ class ParticleFilterTests(CyclopsUnitTestBase):
         np.testing.assert_array_almost_equal(self.__object.measurement_covariance, self.__expected_measurement_covariance)
         np.testing.assert_array_almost_equal(self.__object.inital_xy_covariance, self.__expected_inital_xy_covariance)
         self.assertAlmostEqual(self.__object.reference_distance, self.__expected_reference_distance)
+        self.assertEqual(self.__object.server_port, self.__expected_server_port)
 
     def test_load_camera_parameters(self):
         np.testing.assert_almost_equal(self.__object.camera_matrix, self.__expected_camera_matrix)

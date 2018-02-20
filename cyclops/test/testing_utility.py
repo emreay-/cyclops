@@ -52,7 +52,8 @@ def write_dummy_parameters_file(*args):
     "process_covariance": [1e-2, 1e-2, 1e-2],
     "measurement_covariance": [1e-2, 1e-2, 1e-2],
     "inital_xy_covariance": [1e-2, 1e-2],
-    "reference_distance": 0.05
+    "reference_distance": 0.05,
+    "server_port": 42420
  }''')
 
 

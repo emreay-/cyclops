@@ -61,6 +61,12 @@ install:
 script:
   - ls /usr/local/lib
   - ls /usr/local/lib/python3.5/
+  - python --version
+  - python3 --version
+  - which python
+  - which python3
+  - find /usr/local/lib -name "cv2.so"
   - find /usr/local/lib -name "cv2.so" | xargs -n1 -I % cp % /usr/local/lib/python3.5/site-packages/
+  - python $CYCLOPS_DIR/test/test_particle_filter.py
   - python3 $CYCLOPS_DIR/test/test_particle_filter.py
   - nosetests -s .

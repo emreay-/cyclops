@@ -2,7 +2,9 @@
 
 [![Build Status](https://travis-ci.org/emreay-/cyclops.svg?branch=master)](https://travis-ci.org/emreay-/cyclops)
 
-Cyclops is a particle filter based planar localization system which only uses a single overhead camera such as a webcam. Currently only a single target (which is called a member) can be localized and tracked, however it is planned to support multiple targets. Here is a simple demo of how it works:
+Cyclops is a particle filter based planar localization system which only uses a single overhead camera such as a webcam. Currently only a single target (which is called a member) can be localized and tracked, however it is planned to support multiple targets. Cyclops has a pose server so that the pose estimates can be accessed within the network. 
+
+Here is a simple demo of how it works:
 
 
 ![Alt Text](https://github.com/emreay-/cyclops/blob/master/media/demo.gif)
@@ -56,7 +58,7 @@ Navigate to the `Add Member` button in the user interface, you will see a window
 
 ### Initializing
 
-Optionally, you can select are region for the member's initial location. Navigate to the `Initialize` button in the user interface and drag a rectangle in the popped up window around the member. The center of the circle would be the mean of the intial location distribution. Initial location distribution is a 2D Gaussian and you can adjust the covariance matrix in the `cyclops/param/filter_parameters.json` file. Regardless of manually selecting an initial location or not, the particle orientations are distributed uniformly within `[0, 2*pi)`.
+Optionally, you can select are region for the member's initial location. Navigate to the `Initialize` button in the user interface and drag a rectangle in the popped up window around the member. The center of the rectangle would be the mean of the intial location distribution. Initial location distribution is a 2D Gaussian and you can adjust the covariance matrix in the `cyclops/param/filter_parameters.json` file. Regardless of manually selecting an initial location or not, the particle orientations are distributed uniformly within `[0, 2*pi)`.
 
 If the initialization part is skipped, then the particle filter would perform a global localization by uniformly distributing the particle locations within the configuration space.
 

@@ -3,12 +3,15 @@ import json
 import yaml
 import math
 import logging
+import socket
+import time
 
 import numpy as np
 import cv2
 from scipy.stats import multivariate_normal
 
-from cyclops.type_hints import *
+from cyclops.type_hints import color_type, coordinate, pixel_coord, Callable
+from cyclops.communication import PoseServer
 
 
 class ParticleFilter(object):
@@ -48,6 +51,7 @@ class ParticleFilter(object):
             self.measurement_covariance = np.diag(parameters['measurement_covariance'])
             self.inital_xy_covariance = np.diag(parameters['inital_xy_covariance'])
             self.reference_distance = parameters['reference_distance']
+            self.server_port = parameters['server_port']
 
             self.frame_translation = [self.image_width // 2, self.image_height // 2]
             self.configuration_space_x_min, self.configuration_space_y_min = \
@@ -106,6 +110,7 @@ class ParticleFilter(object):
             lambda x: x % (math.pi * 2), axis=0, arr=self.particles[2, :])
 
     def run(self):
+        self.pose_server = PoseServer(port=self.server_port)
         self.create_video_capture()
         self.create_window()
         self.create_density_functions()
@@ -117,7 +122,9 @@ class ParticleFilter(object):
             self.run_process_model()
             self.run_measurement_update()
             self.resample_particles()
+            self.compute_belief_from_particles()
             self.visualize()
+            self.update_pose_server()
             self.wait_key()
     
     def create_video_capture(self):
@@ -133,6 +140,11 @@ class ParticleFilter(object):
         
         self.measurement_probability_for_theta = multivariate_normal(
             mean=self.rear_color, cov=self.measurement_covariance)
+
+    def create_socket(self):
+        self.socket = socket.socket()
+        self.server_address = (socket.gethostname(), 12349)
+        self.socket.connect(self.server_address)
 
     def get_undistorted_image(self):
         self.capture_image()
@@ -237,6 +249,14 @@ class ParticleFilter(object):
         self.particles = self.particles[:,resampled_particle_indeces]
         self.apply_mode_to_particle_thetas()
 
+    def compute_belief_from_particles(self):
+        self.median_x = int(np.median(self.particles_in_pixel_space[0, :]))
+        self.median_y = int(np.median(self.particles_in_pixel_space[1, :]))
+        self.median_theta = -np.median(self.particles[2, :])
+        self.median_x_physical, self.median_y_physical = \
+            self.convert_pixel_space_to_physical_space((self.median_x, self.median_y))
+        self.median_theta_physical = -self.median_theta
+
     def visualize(self):
         _image = self.undistorted_image.copy()
         _belief_line_length_pixels = 40
@@ -252,24 +272,36 @@ class ParticleFilter(object):
                          int(y + _particle_line_length_pixels * math.sin(theta))), 
                     color=(100, 250, 0), thickness=1)
         
-        median_x = int(np.median(self.particles_in_pixel_space[0, :]))
-        median_y = int(np.median(self.particles_in_pixel_space[1, :]))
-        mean_theta = -np.median(self.particles[2, :])
-        
         cv2.arrowedLine(_image, 
-            pt1=(median_x, median_y), 
-            pt2=(int(median_x + _belief_line_length_pixels * math.cos(mean_theta)), 
-                 int(median_y + _belief_line_length_pixels * math.sin(mean_theta))), 
+            pt1=(self.median_x, self.median_y), 
+            pt2=(int(self.median_x + _belief_line_length_pixels * math.cos(self.median_theta)), 
+                 int(self.median_y + _belief_line_length_pixels * math.sin(self.median_theta))), 
             color=(200, 0, 0), thickness=2)
-
-        median_x_physical, median_y_physical = \
-            self.convert_pixel_space_to_physical_space((median_x, median_y))
+        
         cv2.putText(_image, '{:.2f}, {:.2f}, {:.1f}'.format(
-            median_x_physical, median_y_physical, math.degrees(-mean_theta)), 
-            (median_x, median_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, thickness=2, 
-            color=(200, 25, 200))
+            self.median_x_physical, self.median_y_physical, 
+            math.degrees(self.median_theta_physical)), (self.median_x, self.median_y), 
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, thickness=2, color=(200, 25, 200))
 
         cv2.imshow(self.window, _image)
+
+    def update_pose_server(self):
+        self.socket = socket.socket()
+        self.server_address = (socket.gethostname(), self.server_port)
+        
+        try:
+            self.socket.connect(self.server_address)
+            _current_belief_in_bytes = str.encode(str({'purpose': 'update',
+                                                    'id': '0', 
+                                                    'timestamp': time.time(),
+                                                    'x': self.median_x_physical, 
+                                                    'y': self.median_y_physical,
+                                                    'theta': self.median_theta_physical}))
+            self.socket.send(_current_belief_in_bytes)
+        except Exception as ex:
+            print(ex)
+        
+        self.socket.close()
 
     def wait_key(self):
         return cv2.waitKey(50)

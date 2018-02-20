@@ -4,7 +4,7 @@ import cv2
 from math import ceil
 import logging
 
-from cyclops.type_hints import *
+from cyclops.type_hints import pixel_coord, color_type, Tuple
 from cyclops.utility import Scaler, Member
 from cyclops.particle_filter import ParticleFilter
 

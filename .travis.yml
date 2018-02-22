@@ -27,16 +27,16 @@ install:
 
 #  # OpenCV dependencies - Details available at: http://docs.opencv.org/trunk/doc/tutorials/introduction/linux_install/linux_install.html
   - sudo apt-get install -y build-essential
-  - sudo apt-get install -y cmake libgtk-3-dev pkg-config
+  - sudo apt-get install -y cmake libgtk2.0-dev pkg-config
   - sudo apt-get install -y libjpeg8-dev libtiff5-dev libjasper-dev libpng12-dev
   - sudo apt-get install -y libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
   - sudo apt-get install -y libxvidcore-dev libx264-dev
   - sudo apt-get install -y libatlas-base-dev gfortran
   - sudo apt-get install -y libpython3.5-dev python3-numpy libtbb2 libtbb-dev libdc1394-22-dev
 
-  - wget -O opencv.zip https://github.com/Itseez/opencv/archive/3.1.0.zip
+  - wget -O opencv.zip https://github.com/opencv/opencv/archive/3.3.1.zip
   - unzip opencv.zip
-  - cd opencv-3.1.0
+  - cd opencv-3.1.1
 
   - mkdir build
   - cd build
@@ -44,8 +44,6 @@ install:
 #   # Set build instructions for Ubuntu distro.
   - cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D BUILD_NEW_PYTHON_SUPPORT=ON -D WITH_V4L=ON -D INSTALL_C_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D WITH_QT=ON -D WITH_OPENGL=ON -D PYTHON_INCLUDE_DIR=/usr/include/python3.5/ -D PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5.so -D PYTHON_PACKAGES_PATH=/usr/local/lib/python3.5/site-packages/ -D PYTHON_INCLUDE_DIR2=/usr/include/x86_64-linux-gnu/python3.5 -D PYTHON_EXECUTABLE=/usr/bin/python3.5 -D PYTHON_NUMPY_INCLUDE_DIRS= /usr/lib/python3.5/dist-packages/numpy/core/include/ ..
 
-#   # Run 'make' with four threads.
-  - make -j4
   - make clean
   - make
   - sudo make install

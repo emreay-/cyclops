@@ -27,28 +27,29 @@ install:
 
 #  # OpenCV dependencies - Details available at: http://docs.opencv.org/trunk/doc/tutorials/introduction/linux_install/linux_install.html
   - sudo apt-get install -y build-essential
-  - sudo apt-get install -y cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev
-  - sudo apt-get install -y python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev
-  - sudo apt-get install python3-dev libpython3.5-dev python3-numpy
+  - sudo apt-get install -y cmake libgtk-3-dev pkg-config
+  - sudo apt-get install -y libjpeg8-dev libtiff5-dev libjasper-dev libpng12-dev
+  - sudo apt-get install -y libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
+  - sudo apt-get install -y libxvidcore-dev libx264-dev
+  - sudo apt-get install -y libatlas-base-dev gfortran
+  - sudo apt-get install -y libpython3.5-dev python3-numpy libtbb2 libtbb-dev libdc1394-22-dev
 
-#   # Download v3.0.0 .zip file and extract.
-  - curl -sL https://github.com/Itseez/opencv/archive/3.0.0-beta.zip > opencv.zip
+  - wget -O opencv.zip https://github.com/Itseez/opencv/archive/3.1.0.zip
   - unzip opencv.zip
-  - cd opencv-3.0.0-beta
+  - cd opencv-3.1.0
 
-#   # Create a new 'build' folder.
   - mkdir build
   - cd build
 
 #   # Set build instructions for Ubuntu distro.
-  - cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D BUILD_NEW_PYTHON_SUPPORT=ON -D WITH_V4L=ON -D INSTALL_C_EXAMPLES=ON -D INSTALL_PYTHON_EXAMPLES=ON -D BUILD_EXAMPLES=ON -D WITH_QT=ON -D WITH_OPENGL=ON -D PYTHON_INCLUDE_DIR=/usr/include/python3.5/ -D PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5.so -D PYTHON_PACKAGES_PATH=/usr/local/lib/python3.5/site-packages/ -D PYTHON_INCLUDE_DIR2=/usr/include/x86_64-linux-gnu/python3.5 -D PYTHON_EXECUTABLE=/usr/bin/python3.5 -D PYTHON_NUMPY_INCLUDE_DIRS= /usr/lib/python3.5/dist-packages/numpy/core/include/ ..
+  - cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D BUILD_NEW_PYTHON_SUPPORT=ON -D WITH_V4L=ON -D INSTALL_C_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D WITH_QT=ON -D WITH_OPENGL=ON -D PYTHON_INCLUDE_DIR=/usr/include/python3.5/ -D PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5.so -D PYTHON_PACKAGES_PATH=/usr/local/lib/python3.5/site-packages/ -D PYTHON_INCLUDE_DIR2=/usr/include/x86_64-linux-gnu/python3.5 -D PYTHON_EXECUTABLE=/usr/bin/python3.5 -D PYTHON_NUMPY_INCLUDE_DIRS= /usr/lib/python3.5/dist-packages/numpy/core/include/ ..
 
 #   # Run 'make' with four threads.
   - make -j4
-
-#   # Install to OS.
+  - make clean
+  - make
   - sudo make install
-
+  - sudo ldconfig
 #   # Add configuration to OpenCV to tell it where the library files are located on the file system (/usr/local/lib)
   - sudo sh -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf'
 
@@ -60,10 +61,11 @@ install:
   - pwd
 
 script:
+  - ls -l /usr/local/lib/python3.5/site-packages/
   - find /usr/local/lib -name "cv2.so"
-  - find /home/travis/virtualenv/python3.5.5/bin -name "cv2.so"
+  # - find /home/travis/virtualenv/python3.5.5/bin -name "cv2.so"
   - find /home/travis/virtualenv/ -name "cv2.so"
-  - find /home/travis/virtualenv/ -name "cv2.so" | xargs -n1 -I % cp % /home/travis/virtualenv/python3.5.5/site-packages/
+  # - find /home/travis/virtualenv/ -name "cv2.so" | xargs -n1 -I % cp % /home/travis/virtualenv/python3.5.5/site-packages/
   - python $CYCLOPS_DIR/test/test_particle_filter.py
-  - python3 $CYCLOPS_DIR/test/test_particle_filter.py
+  # - python3 $CYCLOPS_DIR/test/test_particle_filter.py
   - nosetests -s .

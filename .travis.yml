@@ -36,7 +36,7 @@ install:
 
   - wget -O opencv.zip https://github.com/opencv/opencv/archive/3.3.1.zip
   - unzip opencv.zip
-  - cd opencv-3.1.1
+  - cd opencv-3.3.1
 
   - mkdir build
   - cd build
